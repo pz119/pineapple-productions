@@ -16,16 +16,20 @@
             
         }
     </style>
-    <meta>
-    Pineapple Productions is an educational resource teaching people about the life cycle of a pineapple.
-</meta>
 </head>
 <body>
     <h1><strong>Pineapple Productions</strong></h1>
-    <button id="about" class="pineappleButton"><a href = "/about" class = "buttonText">About Us</a></button>
+    <button id="about" class="pineappleButton">About Us</button>
 </body>
-
+<script>
+    const about_us = document.getElementById("about");
+    about_us.addEventListener("click", () => goTo("/about"));
+    function goTo(target){
+        location.href = "https://www.pineapple-productions.net"+target;
+    }
+</script>
 </html>
+
 
 
 
