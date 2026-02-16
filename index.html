@@ -12,12 +12,20 @@
             height: 60px;
             border: none;
         }
+        .logo {
+            background-image: url('/image/Pineapple Productions.PNG');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: none;
+        }
         .buttonText {
-            color: white;
+            color: yellow;
         }
     </style>
 </head>
 <body>
+    <button class="logo" id="about2">
     <h1><strong>Pineapple Productions</strong></h1>
     <button id="about" class="pineappleButton"><p class="buttonText">About Us</p></button>
     <button id="d_d" class="pineappleButton"><p class="buttonText">Deadly Defenders</p></button>
@@ -26,6 +34,8 @@
 <script>
     const about_us = document.getElementById("about");
     about_us.addEventListener("click", () => goTo("/about"));
+    const about_us2 = document.getElementById("about2");
+    about_us2.addEventListener("click", () => goTo("/about"));
     const Deadly_Defenders = document.getElementById("d_d");
     Deadly_Defenders.addEventListener("click", () => goTo("/Deadly_Defenders"));
     const kooking_gaem = document.getElementById("kooking gaem cool");
@@ -35,6 +45,7 @@
     }
 </script>
 </html>
+
 
 
 
