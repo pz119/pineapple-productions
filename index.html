@@ -19,16 +19,23 @@
 </head>
 <body>
     <h1><strong>Pineapple Productions</strong></h1>
-    <button id="about" class="pineappleButton">About Us</button>
+    <button id="about" class="pineappleButton"><p class="buttonText">About Us</p></button>
+    <button id="d_d" class="pineappleButton"><p class="buttonText">Deadly Defenders</p></button>
+    <button id="kooking gaem cool" class="pineappleButton"><p class="buttonText">Kooking Gaem Cool</p></button>
 </body>
 <script>
     const about_us = document.getElementById("about");
     about_us.addEventListener("click", () => goTo("/about"));
+    const Deadly_Defenders = document.getElementById("d_d");
+    Deadly_Defenders.addEventListener("click", () => goTo("/Deadly_Defenders"));
+    const kooking_gaem = document.getElementById("kooking gaem cool");
+    kooking_gaem.addEventListener("click", () => goTo("/Kooking_Gaem_Cool"));
     function goTo(target){
         location.href = "https://www.pineapple-productions.net"+target;
     }
 </script>
 </html>
+
 
 
 
