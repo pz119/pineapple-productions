@@ -2,12 +2,51 @@
 <html>
   <head>
     <style>
-      
+      div{
+        text-align: center;
+        justify-content: center;
+        border-width: 5px;
+        border-style: dashed;
+        border-color: grey;
+      }
+      .header{
+        font-family: "Courier New", Courier, monospace;
+        font-size: 50px;
+      }
+      .bodyText{
+        font-family: "Courier New", Courier, monospace;
+        font-size: 15px;
+      }
+      .dd{
+        background-image: url("pineapple-productions.net/images/deadly_defenders_logo.png")
+      }
+      .kgc{
+        background-image: url("pineapple-productions.net/images/kooking_gaem_cool_logo.png")
+      }
     </style>
   </head>
   <body>
-    
+    <div>
+      <p class="header">
+        <strong>
+          Wipe Progress
+        </strong>
+      </p>
+      <p class="bodyText">
+        Select a game to have progress wiped from.
+        <br>
+        <strong>
+          THIS CAN NOT BE RESTORED. IF YOU CLICK ONE OF THESE BUTTONS, YOU WILL NEVER GET YOUR PROGRESS BACK!!!
+        </strong>
+      </p>
+      <button class="dd" id="deadlyDefendersButton">
+      <button class="kgc" id="kookingGaemButton">
+    </div>
     <script>
+      const ddButton = document.getElementById("deadlyDefnedersButton");
+      ddButton.addEventListener("click", () => wipe("/Deadly_Defenders"));
+      const kookingButton = document.getElementById("kookingGaemButton");
+      kookingButton.addEventListener("click", () => wipe("/Kooking_Gaem_Cool"));
       function wipe(srcToWipe){
         window.location.href = srcToWipe + "?reset=true";
       }
