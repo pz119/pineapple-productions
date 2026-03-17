@@ -24,7 +24,11 @@
       </div>
     </div>
     <script>
-
+      const params = new URLSearchParams(window.location.search);
+      const shouldReset = params.get("reset") === "true";
+      if (shouldReset) {
+          unityInstance.SendMessage("GameObjectName", "ClearPrefs");
+      }
       var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
       var loadingBar = document.querySelector("#unity-loading-bar");
