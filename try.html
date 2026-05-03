@@ -134,6 +134,8 @@
         down.innerText = downText1 + games[game-1] + downText2;
         document.addEventListener("click", () => window.location.href = "https://pineapple-productions.net/");
       }
+      else
+      {
       if(everyoneIn){
         window.location.href = "https://pineapple-productions.net/"+games[game-1];
       }
@@ -146,6 +148,7 @@
         {
           window.location.href = "https://pineapple-productions.net/Sign_In";
         }
+      }
       }
       function inThing(toCheck, arr){
         for(let i = 0; i < arr.length; i++){
