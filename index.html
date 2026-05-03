@@ -128,7 +128,7 @@
       <p><b>lgtmonky13:</b>President and Assistant Coder</p>
       <p><b>Rodentz0:</b> VP and Lead Artist</p>
       <p><b>BJ:</b> Lead Marketing Deveolper and Assistant Artist</p>
-      <p><b>NoPotato:</b>Godot Specialist and CEO of Pototo Studios</p>
+      <p><b>NoPotato: </b>Godot Specialist and CEO of Pototo Studios</p>
     </section>
 
    <!-- <section id="merch" class="section">
@@ -161,8 +161,10 @@
   </footer>
 
   <script>
-    let signedIn = false;
-    let user = "Nobody";
+    const params = new URLSearchParams(window.location.search);
+    
+    let user = params.get("user") ?? "nobody";
+    let signedIn = user != nobody;
     const navItems = document.querySelectorAll('#nav-menu li');
     const sections = document.querySelectorAll('main .section');
     const main = document.querySelector('main');
