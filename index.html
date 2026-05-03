@@ -1,80 +1,248 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Pineapple Productions</title>
-    <style>
-        .pineappleButton {
-            background-image: url('/images/pineapple.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            width: 850px;
-            height: auto;
-            border: none;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            background-color: rgba(0,0,0,0);
-        }
-        .logo {
-            width: 790px;
-            height: auto;
-            display: block;
-        }
-        .center{
-            display: flex;
-            justify-content: center;
-        }
-        .buttonText {
-            color: black;
-            font-weight: 1000;
-        }
-        html, body{
-            margin: 0;
-            padding: 0; 
-            background-color: rgb(145,145,145);
-        }
-        .menuButton{
-            border-radius: 10px;
-            border-color: black;
-            border-style: solid;
-            border-width: 3px;
-            background-color: purple;
-            display: flex;
-            height: 160px;
-            width: 400px;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pineapple Productions</title>
+  <style>
+    /* styles.css */
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background-color: #fffaf0;
+      color: #333;
+    }
+
+    header {
+      background: #ffcc33;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      
+      /* Prevent header items from moving */
+      flex-shrink: 0;       /* prevent shrinking */
+      min-height: 70px;     /* fixed height matching content */
+    }
+
+    header img {
+      height: 50px;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      margin: 0;
+      line-height: 50px; /* vertically align with logo */
+      flex-shrink: 0;
+    }
+
+    nav {
+      background: #ffd966;
+      padding: 0.5rem 2rem;
+    }
+
+    #nav-menu {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      gap: 1.5rem;
+      cursor: pointer;
+    }
+
+    #nav-menu li {
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    #nav-menu li.active,
+    #nav-menu li:hover {
+      background-color: #ffb84d;
+      font-weight: bold;
+    }
+
+    main {
+      padding: 1.5rem 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+      overflow: hidden;
+      transition: height 0.4s ease;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    section h2 {
+      color: #cc6600;
+    }
+
+    ul {
+      padding-left: 1.2rem;
+    }
+
+    li {
+      margin: 0.5rem 0;
+      cursor: pointer;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem 0;
+      background: #ffcc33;
+      font-size: 0.9rem;
+      box-shadow: 0 -1px 5px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
-    <div class="center">
-    <img class="logo" src="/images/Pineapple Productions.PNG">
+  <header>
+    <div class="logo">
+      <!-- Replace 'logo.png' with your logo file -->
+      <img src="https://www.pineapple-productions.net/images/logo.png" alt="Pineapple Productions Logo" />
     </div>
-    <div class="center">
-    <h1><strong>Pineapple Productions</strong></h1>
-    </div>
-    <div class="menuButton">
-    <button id="about" class="pineappleButton"><p class="buttonText">About Us</p></button>
-    </div>
-    <div class="menuButton">
-    <button id="d_d" class="pineappleButton"><p class="buttonText">Deadly Defenders</p></button>
-    </div>
-    <div class="menuButton">
-    <button id="kooking gaem cool" class="pineappleButton"><p class="buttonText">Kooking Gaem Cool</p></button>
-    </div>
-</body>
-<script>
-    const about_us = document.getElementById("about");
-    about_us.addEventListener("click", () => goTo("/about"));
-    const Deadly_Defenders = document.getElementById("d_d");
-    Deadly_Defenders.addEventListener("click", () => goTo("/Deadly_Defenders"));
-    const kooking_gaem = document.getElementById("kooking gaem cool");
-    kooking_gaem.addEventListener("click", () => goTo("/Kooking_Gaem_Cool"));
-    function goTo(target){
-        location.href = "https://www.pineapple-productions.net"+target;
+    <h1>Pineapple Productions</h1>
+  </header>
+
+  <nav>
+    <ul id="nav-menu">
+      <li data-section="about" class="active">About</li>
+      <!-- coming soon... <li data-section="merch">Merch</li> -->
+      <li data-section="games">Games</li>
+      <li data-section="contact">Contact</li>
+    </ul>
+  </nav>
+
+  <main>
+    <section id="about" class="section active">
+      <h2>About Us</h2>
+      <p>Welcome to Pineapple Productions! We Love Bringing Imagination to Life — Creating Epic Games that Let You Play, Express, and Belong.</p>
+      <p><b>BOT9090:</b> CEO and Lead Game Developer</p>
+      <p><b>lgtmonky13:</b>President and Assistant Coder</p>
+      <p><b>Rodentz0:</b> VP and Lead Artist</p>
+      <p><b>BJ:</b> Lead Marketing Deveolper and Assistant Artist</p>
+      <p><b>NoPotato:</b>Godot Specialist and CEO of Pototo Studios</p>
+    </section>
+
+   <!-- <section id="merch" class="section">
+      <h2>Merchandise</h2>
+      <p>Explore our exclusive merch! Click an item to see details.</p>
+      <ul id="merch-list">
+        <li data-description="Limited edition Pineapple T-shirt made of 100% cotton.">Pineapple Productions T-shirt</li>
+        <li data-description="Bright yellow cap with company logo embroidered.">Pineapple Productions hat</li>
+        <li data-description="Stylish gray hoodie with bold Pineapple Productions print.">Pineapple Productions Hoodie</li>
+      </ul>
+    </section>-->
+
+    <section id="games" class="section">
+      <h2>Games</h2>
+      <p>Check out our latest games! Try them for free or become a member to get unlimited access!</p>
+      <ul id="games-list">
+        <li link="try?game=1">Kooking Gaem Cool</li>
+        <li link="try?game=1">Operation Beanstalk</li>
+      </ul>
+    </section>
+
+    <section id="contact" class="section">
+      <h2>Contact Us</h2>
+      <p>Email: oliver15388351@gmail.com</p>
+      <p>Phone: 317-747-0428</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 Pineapple Productions</p>
+  </footer>
+
+  <script>
+    const navItems = document.querySelectorAll('#nav-menu li');
+    const sections = document.querySelectorAll('main .section');
+    const main = document.querySelector('main');
+
+    function showSection(id) {
+      const currentActive = document.querySelector('main .section.active');
+      const nextActive = document.getElementById(id);
+      
+      if (currentActive === nextActive) return;
+
+      // Fade out current
+      currentActive.style.opacity = 1;
+      currentActive.style.transition = 'opacity 0.3s ease';
+      currentActive.style.opacity = 0;
+      
+      setTimeout(() => {
+        currentActive.classList.remove('active');
+        currentActive.style.opacity = '';
+        nextActive.style.opacity = 0;
+        nextActive.classList.add('active');
+
+        // Fade in next
+        nextActive.style.transition = 'opacity 0.3s ease';
+        nextActive.style.opacity = 1;
+
+        // Adjust main height smoothly
+        const sectionHeight = nextActive.offsetHeight;
+        main.style.transition = 'height 0.4s ease';
+        main.style.height = sectionHeight + 80 + 'px'; // padding compensation
+      }, 300);
     }
-</script>
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        navItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+
+        // Add subtle scale animation on click
+        item.style.transition = 'transform 0.15s ease';
+        item.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+          item.style.transform = 'scale(1)';
+        }, 150);
+
+        showSection(item.getAttribute('data-section'));
+      });
+    });
+
+    // Initialize main height for default active section on load with fade in
+    window.addEventListener('load', () => {
+      const active = document.querySelector('#nav-menu li.active');
+      if (active) {
+        const id = active.getAttribute('data-section');
+        const startingSection = document.getElementById(id);
+        startingSection.style.opacity = 0;
+        startingSection.classList.add('active');
+        const sectionHeight = startingSection.offsetHeight;
+        main.style.height = sectionHeight + 80 + 'px'; // padding compensation
+
+        setTimeout(() => {
+          startingSection.style.transition = 'opacity 0.5s ease';
+          startingSection.style.opacity = 1;
+        }, 50);
+      }
+    });
+
+    // Merch items click show details alert
+    const merchList = document.getElementById('merch-list');
+    merchList.querySelectorAll('li').forEach(item => {
+      item.addEventListener('click', () => {
+        alert(item.textContent + ' - ' + item.getAttribute('data-description'));
+      });
+    });
+
+    // Games items click show game info alert
+    const gamesList = document.getElementById('games-list');
+    gamesList.querySelectorAll('li').forEach(item => {
+      item.addEventListener('click', () => {
+        window.location.href = "https://www.pineapple-productions.net/" + item.getAttribute("link");
+      });
+    });
+  </script>
+</body>
 </html>
