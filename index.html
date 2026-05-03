@@ -164,7 +164,7 @@
     const params = new URLSearchParams(window.location.search);
     
     let user = params.get("user") ?? "nobody";
-    let signedIn = user != nobody;
+    let signedIn = user != "nobody";
     const navItems = document.querySelectorAll('#nav-menu li');
     const sections = document.querySelectorAll('main .section');
     const main = document.querySelector('main');
