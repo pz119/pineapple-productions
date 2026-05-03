@@ -243,7 +243,7 @@
     const gamesList = document.getElementById('games-list');
     gamesList.querySelectorAll('li').forEach(item => {
       item.addEventListener('click', () => {
-        console.log("Going to https://www.pineapple-productions.net/" + item.getAttribute("link")
+        console.log("Going to https://www.pineapple-productions.net/" + item.getAttribute("link"));
         let href = "https://www.pineapple-productions.net/" + item.getAttribute("link");
         if(signedIn){
           href = href+"&u="+user;
