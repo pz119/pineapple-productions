@@ -161,6 +161,8 @@
   </footer>
 
   <script>
+    let signedIn = false;
+    let user = "Nobody";
     const navItems = document.querySelectorAll('#nav-menu li');
     const sections = document.querySelectorAll('main .section');
     const main = document.querySelector('main');
@@ -239,7 +241,11 @@
     const gamesList = document.getElementById('games-list');
     gamesList.querySelectorAll('li').forEach(item => {
       item.addEventListener('click', () => {
-        window.location.href = "https://www.pineapple-productions.net/" + item.getAttribute("link");
+        let href = "https://www.pineapple-productions.net/" + item.getAttribute("link");
+        if(signedIn){
+          href = href+"&u="+user;
+        }
+        window.location.href = href;
       });
     });
   </script>
