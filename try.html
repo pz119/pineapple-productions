@@ -124,6 +124,7 @@
       const downText2 = " is currently down at this time. We're working on it, but it may be a few days before it will be back up. Click anywhere to return to the main page.";
       const downGames = ["Operation_Beanstalk"];
       const games = ["Kooking_Gaem_Cool", "Operation_Beanstalk"];
+      const displayNames = ["Kooking Gaem Cool", "Operation Beanstalk"];
       const everyoneIn = true;
       const params = new URLSearchParams(window.location.search);
       const game = params.get("game");
@@ -131,7 +132,7 @@
       if(inThing(games[game-1], downGames)){
         one.classList.add("totalHide");
         two.classList.add("totalHide");
-        down.innerText = downText1 + games[game-1] + downText2;
+        down.innerText = downText1 + displayNames[game-1] + downText2;
         document.addEventListener("click", () => window.location.href = "https://pineapple-productions.net/");
       }
       else
