@@ -186,7 +186,7 @@ button:hover {
 <div id="overlay" class="fadeable-element">
 	<div class="modal">
 		<h1>Operation Beanstalk</h1>
-		<p>Use WASD/Arrow Keys to move, Space to dash, ram enemies to destroy them.</p>
+		<p>Use WASD/Arrow Keys to move, Space to dash, and ram into enemies to destroy them.</p>
 		<button id="start-btn">START MISSION</button>
 	</div>
 </div>
@@ -201,7 +201,6 @@ const player = document.getElementById("player");
 const startButton = document.getElementById("start-btn");
 const startMenu = document.getElementById("overlay");
 const hud = document.getElementById("ui-layer");
-const laser = document.getElementById("laser");
 const enemy = document.getElementById("enemy");
 const scoreDisplay = document.getElementById("score");
 const healthDisplay = document.getElementById("lives");
@@ -223,7 +222,6 @@ let lastLook = "u";
 let started = false;
 let lost = false;
 
-laser.classList.add("hide");
 loseScreen.classList.add("hide");
 
 startButton.addEventListener("click", () => {
@@ -263,8 +261,8 @@ function gameLoop(currentTime) {
 
 	enemy.style.left = enemyX + "px";
 	enemy.style.top = enemyY + "px";
-
-	enemyY -= ((lastTime - currentTime) * 0.225);
+	if (!lastTime) lastTime = currentTime;
+	enemyY += (currentTime - lastTime) * 0.225;
 
 	if (!started) {
 		enemyY = -50;
