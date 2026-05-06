@@ -157,8 +157,9 @@ button:hover {
 	position: absolute;
 	z-index: 50;
 	width: 40px;
+	height: auto;
 }
-
+ 
 #lose {
 	position: absolute;
 	top: 50%;
@@ -243,7 +244,7 @@ window.addEventListener("keyup", e => {
 });
 
 function gameLoop(currentTime) {
-
+	if (!lastTime) lastTime = currentTime;
 	healthDisplay.innerText = ["💀","❤","❤❤","❤❤❤"][health] || "💀";
 	scoreDisplay.innerText = score.toString().padStart(4,"0");
 
@@ -261,7 +262,7 @@ function gameLoop(currentTime) {
 
 	enemy.style.left = enemyX + "px";
 	enemy.style.top = enemyY + "px";
-	if (!lastTime) lastTime = currentTime;
+	
 	enemyY += (currentTime - lastTime) * 0.225;
 
 	if (!started) {
