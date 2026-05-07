@@ -257,7 +257,7 @@ function gameLoop(currentTime) {
 
 	posX = Math.max(0, Math.min(posX, 750));
 	posY = Math.max(0, Math.min(posY, 550));
-	enemyX = Math.max(0, Math.min(posX, 750));
+	enemyX = Math.max(0, Math.min(enemyX, 750));
 
 	player.style.left = posX + "px";
 	player.style.top = posY + "px";
