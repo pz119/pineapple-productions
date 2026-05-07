@@ -157,6 +157,7 @@ button:hover {
 	position: absolute;
 	z-index: 50;
 	width: 40px;
+	opacity: 1;
 	height: auto;
 }
  
@@ -256,6 +257,7 @@ function gameLoop(currentTime) {
 
 	posX = Math.max(0, Math.min(posX, 750));
 	posY = Math.max(0, Math.min(posY, 550));
+	enemyX = Math.max(0, Math.min(posX, 750));
 
 	player.style.left = posX + "px";
 	player.style.top = posY + "px";
