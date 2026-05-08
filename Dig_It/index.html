@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>
+			Project Beanstalk
+		</title>
+		<style>
+			body {
+			margin: 0;
+			padding: 0;
+			background: #1a1a2e;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			font-family: &#39;Segoe UI&#39;, Tahoma, Geneva, Verdana, sans-serif;
+			overflow: hidden;
+			color: white;
+			}
+
+			#game-container {
+			position: relative;
+			width: 800px;
+			height: 600px;
+			border: 4px solid #16213e;
+			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+			background: #0f3460;
+			border-radius: 8px;
+			overflow: hidden;
+			}
+
+			#gameCanvas {
+			display: block;
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(to bottom, #0f3460, #16213e);
+			}
+			#ui-layer {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			padding: 20px;
+			display: flex;
+			justify-content: space-between;
+			pointer-events: none;
+			box-sizing: border-box;
+			z-index: 5;
+			}
+
+			.stat-box {
+			color: #e94560;
+			font-weight: bold;
+			font-size: 1.2rem;
+			text-shadow: 2px 2px #000;
+			letter-spacing: 1px;
+			}
+			#overlay {
+			position: absolute;
+			inset: 0;
+			background: rgba(15, 52, 96, 0.9);
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 10;
+			}
+
+			.modal {
+			text-align: center;
+			padding: 40px;
+			background: #16213e;
+			border: 2px solid #e94560;
+			border-radius: 15px;
+			box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+			transition: all 0.3s ease;
+			}
+
+			.modal:hover{
+			color: #fb6782;
+			text-align: center;
+			padding: 40px;
+			background: #16213e;
+			border: 2px solid #fb6782;
+			border-radius: 15px;
+			box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(233, 69, 96, 0.5)
+			}
+
+			h1 {
+			margin-top: 0;
+			font-size: 3rem;
+			color: #e94560;
+			text-transform: uppercase;
+			letter-spacing: 4px;
+			}
+
+			p {
+			color: #8da2fb;
+			margin-bottom: 30px;
+			}
+
+			button {
+			background: white;
+			border: none;
+			color: #e94560;
+			padding: 15px 40px;
+			font-size: 1.2rem;
+			font-weight: bold;
+			border-radius: 50px;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+			}
+
+			button:hover {
+			background: #e94560;
+			border: none;
+			color: white;
+			padding: 15px 40px;
+			font-size: 1.2rem;
+			font-weight: bold;
+			border-radius: 50px;
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(233, 69, 96, 0.6);
+			}
+			.fadeable-element {
+			opacity: 1;
+			transition: opacity 1s ease-out;
+			}
+
+			.is-faded {
+			opacity: 0;
+			}
+			.fadeinable-element {
+			opacity: 0;
+			transition: opacity 1s ease-in;
+			}
+
+			.is-fadedin {
+			opacity: 1;
+			}
+			.hide{
+			display: none;
+			}
+			#player {
+			position: absolute;
+			z-index: 2;
+			width: 50px;
+			}
+			#laser {
+			opacity: 1;
+			position: absolute;
+			z-index: 10;
+			width: 200px;
+			height: 1000px;
+			}
+			#enemy {
+			opacity: 1;
+			position: absolute;
+			z-index: 50;
+			width: 40px;
+			height: auto;
+			}
+			#lose{
+			position: absolute;
+			left: 400;
+			top: 300;
+			z-index: 999;
+			width: 825px;
+			height: 600px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="game-container">
+			<div id="ui-layer" class="fadeinable-element">
+				<div class="stat-box">
+					SCORE:
+					<span id="score">
+						0000
+					</span>
+				</div>
+				<div class="stat-box">
+					LIVES:
+					<span id="lives">
+						❤❤❤
+					</span>
+				</div>
+			</div>
+			<img class="fadeinable-element" id="player" src="https://files.catbox.moe/xp6c4q.png" />
+			<img class="fadeinable-element" id="laser" src="https://files.catbox.moe/y3lf6t.png" />
+			<img class="fadeinable-element" id="enemy" src="https://files.catbox.moe/ckhq0n.png" />
+			<div id="overlay" class="fadeable-element">
+				<div class="modal">
+					<h1>
+						Operation Beanstalk
+					</h1>
+					<p>
+						Use WASD/Arrow Keys to navigate, Space to dash, and ram into enemies to kill them.
+					</p>
+					<button id="start-btn">
+						START MISSION
+					</button>
+				</div>
+			</div>
+			<img id="lose" src="https://files.catbox.moe/fetw60.png" />
+			<canvas id="gameCanvas">
+			</canvas>
+		</div>
+		<script>
+			const player = document.getElementById(&#34;player&#34;);
+			const startButton = document.getElementById(&#34;start-btn&#34;);
+			const startMenu = document.getElementById(&#34;overlay&#34;);
+			const hud = document.getElementById(&#34;ui-layer&#34;);
+			const laser = document.getElementById(&#34;laser&#34;);
+			const enemy = document.getElementById(&#34;enemy&#34;);
+			const scoreDisplay = document.getElementById(&#34;score&#34;);
+			const keys = {};
+			const healthDisplay = document.getElementById(&#34;lives&#34;);
+			const loseScreen = document.getElementById(&#34;lose&#34;);
+			let posX = 375;
+			let posY = 500;
+			const speed = 5;
+			let score = 0;
+
+			laser.classList.add(&#34;hide&#34;);
+			loseScreen.classList.add(&#34;hide&#34;);
+			enemy.classList.remove(&#34;hide&#34;);
+			hud.classList.remove(&#34;hide&#34;);
+			startButton.addEventListener(&#34;click&#34;, () =&gt; {
+			startMenu.style.display = &#34;none&#34;;
+			hud.classList.add(&#34;is-fadedin&#34;);
+			player.classList.add(&#34;is-fadedin&#34;);
+			enemy.classList.remove(&#34;hide&#34;);
+			killEnemy();
+			started = true;
+			});
+			requestAnimationFrame(gameLoop);
+			const movementKeys = [
+			&#39;KeyW&#39;, &#39;KeyA&#39;, &#39;KeyS&#39;, &#39;KeyD&#39;,
+			&#39;ArrowUp&#39;, &#39;ArrowDown&#39;, &#39;ArrowLeft&#39;, &#39;ArrowRight&#39;,
+			&#39;Space&#39;
+			];
+
+			window.addEventListener(&#34;keydown&#34;, e =&gt; {
+			keys[e.code] = true;
+
+			if (!movementKeys.includes(e.code)) {
+			keys[&#34;isShootingKey&#34;] = true;
+			}
+			});
+
+			window.addEventListener(&#34;keyup&#34;, e =&gt; {
+			keys[e.code] = false;
+
+			if (!movementKeys.includes(e.code)) {
+			keys[&#34;isShootingKey&#34;] = false;
+			}
+			});
+
+			const allowedKeys = [
+			&#39;KeyW&#39;, &#39;KeyA&#39;, &#39;KeyS&#39;, &#39;KeyD&#39;,
+			&#39;ArrowUp&#39;, &#39;ArrowDown&#39;, &#39;ArrowLeft&#39;, &#39;ArrowRight&#39;,
+			&#39;Space&#39;
+			];
+			let offTime = 0;
+			let shootTime = 0;
+			let enemyX = 100;
+			let enemyY = -50;
+			let lastTime = 0
+			let health = 3;
+			let started = false;
+			started = false;
+			enemy.style.left = &#34;-50px&#34;;
+			enemy.style.top = &#34;-50px&#34;;
+			let primed = true;
+			function gameLoop(currentTime) {
+			if(health &gt;= 3){
+			healthDisplay.innerText = &#34;❤❤❤&#34;;
+			} else if(health == 2){
+			healthDisplay.innerText = &#34;❤❤&#34;;
+			} else if (health == 1){
+			healthDisplay.innerText = &#34;❤&#34;;
+			}else{
+			healthDisplay.innerText = &#34;💀&#34;;
+			}
+			scoreDisplay.innerText = score.toString().padStart(4, &#39;0&#39;);
+
+			if (keys[&#34;ArrowLeft&#34;] || keys[&#34;KeyA&#34;]) move(false,-speed);
+			if (keys[&#34;ArrowRight&#34;] || keys[&#34;KeyD&#34;]) move(false,speed);
+			if (keys[&#34;ArrowUp&#34;] || keys[&#34;KeyW&#34;]) move(true,-speed);
+			if (keys[&#34;ArrowDown&#34;] || keys[&#34;KeyS&#34;]) move(true,speed);
+			if (keys[&#34;Space&#34;]) dash(currentTime);
+			if(keys[&#34;isShootingKey&#34;]) shoot(currentTime);
+			primed = !keys[&#34;isShootingKey&#34;];
+			posX = Math.max(0, Math.min(posX, 750));
+			posY = Math.max(0, Math.min(posY, 550));
+			player.style.left = posX + &#34;px&#34;;
+			player.style.top = posY + &#34;px”;
+
+			enemy.style.left = enemyX + &#34;px&#34;;
+			enemy.style.top = enemyY + &#34;px&#34;;
+
+			if(currentTime &gt;= offTime){
+			laser.classList.add(&#34;hide&#34;);
+			}
+			enemyY -= ((lastTime - currentTime) * .225);
+			if(!started){
+			enemyY = -50;
+			player.classList.add(&#34;hide&#34;);
+			}
+			else
+			{
+			player.classList.remove(&#34;hide&#34;);
+			}
+			if(enemyY &gt;= 600){
+			killEnemy();
+			health-=1;
+			if(health===0){
+			lose();
+			}
+			}
+			if(Math.abs(enemyX - posX) &lt; 20 &amp;&amp; Math.abs(enemyY - posY) &lt; 20){
+			killEnemy();
+			}
+			lastTime = currentTime;
+			if(!lost){
+			requestAnimationFrame(gameLoop);
+			}
+			}
+			let dashCooldown = 0;
+			let lastLook = &#34;u&#34;;
+			const dashDistance = 150;
+			function dash(currTime){
+			if(dashCooldown &lt;= currTime){
+			dashCooldown = currTime + 1000;
+			switch(lastLook){
+			case &#34;u&#34;:
+			posY -= dashDistance;
+			break;
+			case &#34;d&#34;:
+			posY += dashDistance;
+			break;
+			case &#34;l&#34;:
+			posX -= dashDistance;
+			break;
+			case &#34;r&#34;:
+			posX += dashDistance;
+			break;
+			}
+			}
+			}
+			function move(y,dis){
+			if(y){
+			posY += dis;
+			}
+			else
+			{
+			posX += dis;
+			}
+			if(y &amp;&amp; dis &gt; 0){
+			lastLook = &#34;d&#34;;
+			}else if(y &amp;&amp; dis &lt; 0){
+			lastLook = &#34;u&#34;;
+			}else if(!y &amp;&amp; dis &gt; 0){
+			lastLook = &#34;r&#34;;
+			}else{
+			lastLook = &#34;l&#34;;
+			}
+			}
+			function killEnemy(){
+			enemyX = Math.floor(Math.random() * 600)+50;
+			enemyY = -50;
+			score += 20;
+			}
+			let lost = false;
+			function lose(){
+			lost = true;
+			player.classList.add(&#34;hide&#34;);
+			enemy.classList.add(&#34;hide&#34;);
+			hud.classList.add(&#34;hide&#34;);
+			startMenu.classList.add(&#34;hide&#34;);
+			loseScreen.classList.remove(&#34;hide&#34;);
+			window.addEventListener(&#34;click&#34;,() =&gt; window.location.reload());
+			}
+		</script>
+	</body>
+</html>
