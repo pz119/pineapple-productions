@@ -364,14 +364,22 @@
                 pyodide.setStdout({
 
                     batched(text) {
-
-                        consoleBox.textContent += text;
-
+                
+                        // Pyodide's batched stdout doesn't necessarily
+                        // include the newline from Python's print().
+                        //
+                        // Add one so every print() starts the next line.
+                
+                        if (text.endsWith("\n")) {
+                            consoleBox.textContent += text;
+                        } else {
+                            consoleBox.textContent += text + "\n";
+                        }
+                
                         consoleBox.scrollTop =
                             consoleBox.scrollHeight;
-
                     }
-
+                
                 });
 
 
