@@ -1,491 +1,244 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Dit It</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-    body {
-        background: #1e1e1e;
-        color: #00ff88;
-        font-family: monospace;
-        margin: 0;
-        padding: 20px;
-    }
+    <title>Python Program</title>
 
-    h1 {
-        color: white;
-    }
+    <!-- Pyodide -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.2/full/pyodide.js"></script>
 
-    #console {
-        width: 100%;
-        height: 400px;
-        background: black;
-        border: 2px solid #00ff88;
-        padding: 10px;
-        overflow-y: auto;
-        white-space: pre-wrap;
-        margin-bottom: 10px;
-    }
+    <style>
+        body {
+            background: #111;
+            color: #eee;
+            font-family: monospace;
+            margin: 0;
+            padding: 30px;
+        }
 
-    #inputBox {
-        width: 80%;
-        padding: 10px;
-        font-size: 16px;
-        background: #111;
-        color: #00ff88;
-        border: 2px solid #00ff88;
-    }
+        #console {
+            max-width: 900px;
+            margin: auto;
+            background: #000;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 400px;
+        }
 
-    button {
-        padding: 10px 20px;
-        font-size: 16px;
-        background: #00ff88;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-    }
+        #output {
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
 
-    button:hover {
-        background: #00cc66;
-    }
-</style>
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .input-prompt {
+            white-space: pre-wrap;
+        }
+
+        .user-input {
+            flex: 1;
+            background: transparent;
+            color: #fff;
+            border: none;
+            outline: none;
+            font-family: monospace;
+            font-size: inherit;
+            padding: 0;
+            margin: 0;
+        }
+
+        .error {
+            color: #ff5555;
+        }
+    </style>
 </head>
+
 <body>
 
-<h1>Dig It</h1>
-
-<div id="console"></div>
-
-<input type="text" id="inputBox" placeholder="Type here..." />
-<button onclick="submitInput()">Enter</button>
+<div id="console">
+    <div id="output">Loading Python...</div>
+</div>
 
 <script>
-const digResults = ["weapon","snake","scorpion",3,5,1,"money","money","snake","medkit"];
-const expResults = ["trader","shoes","money",12,"wolf","wolf","wolf","medstim","wolf","wolf","wolf","weapon","tnt","wolf","wolf","alpha wolf"];
-const scavResults = ["money","lava","money","","","","","","","","","","","turboShovel","mugger","mugger","medstim","dead animal","landmine","weapon","weapon","weapon","weapon","weapon"];
-const impDigResults = ["weapon","scorpion",3,5,1,"money","money","medstim"];
-const inescapable = ["snake","wolf","alpha wolf"];
 
-let health = 10;
-let food = 0;
-let stimHealth = health;
-let money = 0;
+let pyodide;
 
-let hasTurbo = false;
-let hasWeapon = false;
-let hasShoes = false;
-let hasVial = false;
-let hasBoom = false;
-let hasKey = false;
-let hasMap = false;
-let hasStim = false;
-let hasPass = false;
-document.addEventListener("keydown", function(event) {if (event.key === "Enter") submitInput();});
-let waitingAction = null;
+const output = document.getElementById("output");
 
-const consoleBox = document.getElementById("console");
-const inputBox = document.getElementById("inputBox");
 
-function print(text) {
-    consoleBox.innerHTML += text + "\n";
-    consoleBox.scrollTop = consoleBox.scrollHeight;
+// --------------------------------------------------
+// Write text to the console
+// --------------------------------------------------
+
+function write(text) {
+    output.appendChild(document.createTextNode(text));
 }
 
-function rand(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-}
 
-function submitInput() {
-    const input = inputBox.value.trim();
-    inputBox.value = "";
+// --------------------------------------------------
+// Create an input box for Python's input()
+// --------------------------------------------------
 
-    print("> " + input);
+function createInput(promptText) {
 
-    if (waitingAction) {
-        waitingAction(input);
-    }
-}
+    return new Promise((resolve) => {
 
-function ask() {
+        const line = document.createElement("div");
+        line.className = "input-line";
 
-    if (health <= 0) {
-        print("You died! Restarting...");
-        restart();
-        return;
-    }
+        const prompt = document.createElement("span");
+        prompt.className = "input-prompt";
+        prompt.textContent = promptText;
 
-    print(`Health: ${health}, Money: ${money}, Food: ${food}`);
+        const input = document.createElement("input");
+        input.className = "user-input";
+        input.type = "text";
+        input.autocomplete = "off";
+        input.spellcheck = false;
 
-    if (health < stimHealth && hasStim) {
-        health = stimHealth;
-        hasStim = false;
-        print("You dodged the health decrease.");
-    }
+        line.appendChild(prompt);
+        line.appendChild(input);
 
-    stimHealth = health;
+        output.appendChild(line);
 
-    print("Would you like to dig, explore, scavenge, escape, or eat?");
+        input.focus();
 
-    waitingAction = function(input) {
-        input = input.toLowerCase();
+        // Submit when Enter is pressed
+        input.addEventListener("keydown", function(event) {
 
-        if (input === "dig") {
-            dig();
-        } else if (input === "explore") {
-            explore();
-        } else if (input === "scavenge") {
-            scavenge();
-        } else if (input === "escape") {
-            escapeGame();
-        } else if (input === "eat") {
-            eat();
-        } else {
-            print("Sorry, I don't understand.");
-            ask();
-        }
-    };
-}
-
-function restart() {
-    health = 10;
-    food = 0;
-    money = 0;
-
-    hasWeapon = false;
-    hasShoes = false;
-    hasBoom = false;
-    hasKey = false;
-    hasTurbo = false;
-    hasMap = false;
-    hasStim = false;
-    hasPass = false;
-
-    print("Welcome to ...");
-    print("DIG IT o yea");
-    print("Try to escape the forest!");
-
-    ask();
-}
-
-function eat() {
-    if (food === 0) {
-        print("You don't have any food.");
-    } else {
-        print("You ate some food.");
-        health += food;
-        food = 0;
-    }
-
-    ask();
-}
-
-function dig() {
-    let res = hasTurbo ? rand(impDigResults) : rand(digResults);
-
-    if (typeof res === "number") {
-        print("You found some food.");
-        food += res;
-        ask();
-        return;
-    }
-
-    if (res === "money") {
-        print("You found ten dollars.");
-        money += 10;
-        ask();
-        return;
-    }
-
-    if (res === "weapon") {
-        print("You found a weapon.");
-        hasWeapon = true;
-        ask();
-        return;
-    }
-
-    if (res === "medkit") {
-        print("You found a medkit. Full health!");
-        health = 10;
-        ask();
-        return;
-    }
-
-    print("You encountered a " + res + ".");
-    print("Fight or run?");
-
-    waitingAction = function(input) {
-
-        if (input === "fight") {
-            if (hasWeapon) {
-                print("You win! Weapon broke. +$20");
-                hasWeapon = false;
-                money += 20;
-            } else {
-                print("u got COOKED");
-                health -= 3;
-            }
-        } else if (input === "run") {
-
-            if (inescapable.includes(res) && !hasShoes) {
-                print("ur 2 slow lol");
-                health -= 4;
-            } else {
-                print("You escaped!");
+            if (event.key !== "Enter") {
+                return;
             }
 
-        } else {
-            print("GET TROLLED -5 health");
-            health -= 5;
-        }
+            event.preventDefault();
 
-        ask();
-    };
+            const value = input.value;
+
+            // Replace the editable input with normal text
+            const text = document.createTextNode(value);
+
+            line.replaceChild(text, input);
+
+            // Continue Python
+            resolve(value);
+        });
+
+    });
 }
 
-function explore() {
 
-    let res = rand(expResults);
+// --------------------------------------------------
+// Start Python
+// --------------------------------------------------
 
-    if (typeof res === "number") {
-        print("You found food.");
-        food += res;
-        ask();
-        return;
-    }
+async function main() {
 
-    if (res === "money") {
-        print("You found thirty dollars.");
-        money += 30;
-        ask();
-        return;
-    }
+    try {
 
-    if (res === "weapon") {
-        print("You found a weapon.");
-        hasWeapon = true;
-        ask();
-        return;
-    }
+        output.textContent = "Loading Python...\n";
 
-    if (res === "shoes") {
-        print("You found shoes.");
-        hasShoes = true;
-        ask();
-        return;
-    }
+        pyodide = await loadPyodide();
 
-    if (res === "tnt") {
-        print("You found TNT.");
-        hasBoom = true;
+        output.textContent = "Python loaded.\n\n";
 
-        if (Math.floor(Math.random() * 5) === 0) {
-            print("You also found a map!");
-            hasMap = true;
-        }
 
-        ask();
-        return;
-    }
+        // --------------------------------------------------
+        // Redirect print() to our console
+        // --------------------------------------------------
 
-    if (res === "trader") {
-        print("Trader found. Buy food? y/n");
+        pyodide.setStdout({
+            batched: (text) => {
 
-        waitingAction = function(input) {
+                write(text);
 
-            if (input === "y") {
-
-                while (money >= 10) {
-                    money -= 10;
-                    food += 3;
-                }
-
-                print("Bought food.");
-            }
-
-            ask();
-        };
-
-        return;
-    }
-
-    print("You encountered a " + res + ".");
-    print("Fight or run?");
-
-    waitingAction = function(input) {
-
-        if (input === "fight") {
-
-            if (res === "alpha wolf") {
-
-                if (hasBoom) {
-                    print("You destroy the Alpha Wolf!");
-                    hasBoom = false;
-                    hasKey = true;
-                    money += 50;
-                } else {
-                    print("u got COOKED");
-                    health -= 5;
-                }
-
-            } else {
-
-                if (hasWeapon) {
-                    print("You win! Weapon broke. +$30");
-                    hasWeapon = false;
-                    money += 30;
-                } else {
-                    print("u got COOKED");
-                    health -= 5;
+                // print() normally includes its own newline.
+                // Pyodide's stdout gives us that newline as well.
+                if (!text.endsWith("\n")) {
+                    write("\n");
                 }
             }
+        });
 
-        } else if (input === "run") {
 
-            if (inescapable.includes(res) && !hasShoes) {
-                print("ur 2 slow lol");
-                health -= 6;
-            } else {
-                print("You escaped!");
+        // --------------------------------------------------
+        // Redirect errors to our console
+        // --------------------------------------------------
+
+        pyodide.setStderr({
+            batched: (text) => {
+
+                const error = document.createElement("div");
+                error.className = "error";
+                error.textContent = text;
+
+                output.appendChild(error);
             }
+        });
 
-        } else {
-            print("GET TROLLED -5 health");
-            health -= 5;
+
+        // --------------------------------------------------
+        // Replace Python's input()
+        // --------------------------------------------------
+
+        pyodide.setStdin({
+            stdin: async () => {
+
+                const value = await createInput("");
+
+                return value;
+            }
+        });
+
+
+        // --------------------------------------------------
+        // Load program.py
+        // --------------------------------------------------
+
+        const response = await fetch("program.py");
+
+        if (!response.ok) {
+            throw new Error(
+                `Could not load program.py (${response.status})`
+            );
         }
 
-        ask();
-    };
+        const pythonCode = await response.text();
+
+
+        // --------------------------------------------------
+        // Run the Python program
+        // --------------------------------------------------
+
+        await pyodide.runPythonAsync(pythonCode);
+
+
+        write("\n\nProgram finished.");
+
+
+    } catch (error) {
+
+        const errorElement = document.createElement("div");
+
+        errorElement.className = "error";
+
+        errorElement.textContent =
+            "\n\nERROR:\n" + error.toString();
+
+        output.appendChild(errorElement);
+    }
 }
 
-function scavenge() {
 
-    let res = rand(scavResults);
+main();
 
-    if (typeof res === "number") {
-        print("You found food.");
-        food += res;
-        ask();
-        return;
-    }
-
-    if (res === "") {
-        print("Nothing found. -2 health.");
-        health -= 2;
-        ask();
-        return;
-    }
-
-    if (res === "money") {
-        print("You found $50.");
-        money += 50;
-        ask();
-        return;
-    }
-
-    if (res === "weapon") {
-        print("You found a weapon.");
-        hasWeapon = true;
-        ask();
-        return;
-    }
-
-    if (res === "turboShovel") {
-        print("You found a turbo shovel!");
-        hasTurbo = true;
-        ask();
-        return;
-    }
-
-    if (res === "landmine") {
-        print("BOOM. Landmine.");
-        health -= 10;
-        ask();
-        return;
-    }
-
-    print("You encountered a " + res + ".");
-    print("Fight, pay, or run?");
-
-    waitingAction = function(input) {
-
-        if (input === "fight") {
-
-            if (hasWeapon) {
-                print("You win! Weapon broke.");
-                hasWeapon = false;
-                money += 20;
-            } else {
-                print("u got COOKED");
-                health -= 3;
-            }
-
-        } else if (input === "pay") {
-
-            money = 0;
-            print("You paid them off.");
-
-        } else if (input === "run") {
-
-            print("You escaped!");
-
-        } else {
-
-            print("GET TROLLED -5 health");
-            health -= 5;
-        }
-
-        ask();
-    };
-}
-
-function escapeGame() {
-
-    if (!hasMap) {
-        print("You wander endlessly before giving up.");
-        ask();
-        return;
-    }
-
-    if (health < 20) {
-        print("You don't feel strong enough.");
-        ask();
-        return;
-    }
-
-    if (!hasKey) {
-        print("You need a key.");
-        ask();
-        return;
-    }
-
-    if (!hasPass) {
-        print("You need a code.");
-        ask();
-        return;
-    }
-
-    if (food < 40) {
-        print("You need more food.");
-        ask();
-        return;
-    }
-
-    if (money < 60) {
-        print("You need more money.");
-        ask();
-        return;
-    }
-
-    print("YOU ESCAPED THE FOREST!");
-}
-
-print("Welcome to ...");
-print("DIG IT o yea");
-print("Try to escape the forest!");
-
-ask();
 </script>
 
 </body>
