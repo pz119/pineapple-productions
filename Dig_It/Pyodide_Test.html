@@ -1,216 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dig It</title>
 
-    <title>Python Program</title>
+<style>
+    body {
+        background: #1e1e1e;
+        color: #00ff88;
+        font-family: monospace;
+        margin: 0;
+        padding: 20px;
+    }
 
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.2/full/pyodide.js"></script>
+    h1 {
+        color: white;
+    }
 
-    <style>
-        body {
-            background: #111;
-            color: #eee;
-            font-family: monospace;
-            margin: 0;
-            padding: 30px;
-        }
+    #console {
+        width: 100%;
+        height: 400px;
+        background: black;
+        border: 2px solid #00ff88;
+        padding: 10px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+    }
 
-        #console {
-            max-width: 900px;
-            margin: auto;
-            background: #000;
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 20px;
-            min-height: 400px;
-            box-sizing: border-box;
-        }
+    #inputBox {
+        width: 80%;
+        padding: 10px;
+        font-size: 16px;
+        background: #111;
+        color: #00ff88;
+        border: 2px solid #00ff88;
+        box-sizing: border-box;
+    }
 
-        #output {
-            white-space: pre-wrap;
-            line-height: 1.5;
-        }
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background: #00ff88;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+    }
 
-        .input-line {
-            display: flex;
-            align-items: baseline;
-            white-space: pre-wrap;
-        }
+    button:hover {
+        background: #00cc66;
+    }
 
-        .input-box {
-            flex: 1;
-            min-width: 0;
-            background: transparent;
-            color: white;
-            border: none;
-            outline: none;
-            font-family: monospace;
-            font-size: inherit;
-        }
-
-        .error {
-            color: #ff5555;
-            white-space: pre-wrap;
-        }
-
-        .status {
-            color: #888;
-        }
-    </style>
+    .error {
+        color: #ff4444;
+    }
+</style>
 </head>
 
 <body>
 
-<div id="console">
-    <div id="output">Loading Python...</div>
-</div>
+<h1>Dig It</h1>
+
+<div id="console">Loading Python...</div>
+
+<input
+    type="text"
+    id="inputBox"
+    placeholder="Type here..."
+    autocomplete="off"
+/>
+
+<button id="enterButton">Enter</button>
+
+
+<!-- Pyodide -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.2/full/pyodide.js"></script>
 
 <script>
 
-let pyodide;
-
-const output = document.getElementById("output");
+const consoleBox = document.getElementById("console");
+const inputBox = document.getElementById("inputBox");
+const enterButton = document.getElementById("enterButton");
 
 
 // --------------------------------------------------
-// Write text
+// Console output
 // --------------------------------------------------
 
-function write(text) {
-    output.appendChild(
-        document.createTextNode(text)
-    );
+function print(text) {
+
+    consoleBox.textContent += text;
+
+    consoleBox.scrollTop =
+        consoleBox.scrollHeight;
 }
 
 
 // --------------------------------------------------
-// Create browser input
+// Start Pyodide
 // --------------------------------------------------
 
-function browserInput(promptText) {
-
-    return new Promise((resolve) => {
-
-        const line = document.createElement("div");
-        line.className = "input-line";
-
-        const prompt = document.createTextNode(promptText);
-
-        const input = document.createElement("input");
-
-        input.className = "input-box";
-        input.type = "text";
-        input.autocomplete = "off";
-        input.spellcheck = false;
-
-        line.appendChild(prompt);
-        line.appendChild(input);
-
-        output.appendChild(line);
-
-        input.focus();
-
-
-        input.addEventListener("keydown", function(event) {
-
-            if (event.key !== "Enter") {
-                return;
-            }
-
-            event.preventDefault();
-
-            const value = input.value;
-
-            // Replace input box with entered text
-            const text =
-                document.createTextNode(value);
-
-            line.replaceChild(text, input);
-
-            resolve(value);
-        });
-
-    });
-}
-
-
-// --------------------------------------------------
-// Main
-// --------------------------------------------------
-
-async function main() {
+async function startPython() {
 
     try {
 
+        print("\nLoading Python...\n");
+
+
         // Load Pyodide
-        pyodide = await loadPyodide();
-
-
-        output.textContent = "";
-
-        write("Python loaded.\n\n");
+        const pyodide =
+            await loadPyodide();
 
 
         // --------------------------------------------------
-        // stdout
+        // Python print()
         // --------------------------------------------------
 
         pyodide.setStdout({
 
             batched(text) {
-                write(text);
+
+                print(text);
+
             }
 
         });
 
 
         // --------------------------------------------------
-        // stderr
+        // Python errors
         // --------------------------------------------------
 
         pyodide.setStderr({
 
             batched(text) {
 
-                const error =
-                    document.createElement("div");
+                consoleBox.innerHTML +=
+                    `<span class="error">${escapeHtml(text)}</span>`;
 
-                error.className = "error";
-
-                error.textContent = text;
-
-                output.appendChild(error);
+                consoleBox.scrollTop =
+                    consoleBox.scrollHeight;
             }
 
         });
 
 
         // --------------------------------------------------
-        // Custom input()
+        // Python input()
+        //
+        // This uses the browser's synchronous prompt.
+        // It is compatible with normal Python input().
         // --------------------------------------------------
 
         pyodide.setStdin({
 
-            stdin(prompt) {
+            stdin() {
 
-                /*
-                 * Python's input() is synchronous.
-                 *
-                 * browserInput() is asynchronous.
-                 *
-                 * run_sync() bridges the two.
-                 */
+                const value =
+                    window.prompt("");
 
-                const promise =
-                    browserInput(prompt || "");
+                if (value === null) {
+                    return null;
+                }
 
-                return pyodide.ffi.run_sync(
-                    promise
-                );
-            }
+                return value;
+            },
 
+            isatty: true
         });
 
 
@@ -237,48 +195,48 @@ async function main() {
 
 
         // --------------------------------------------------
-        // Execute the COMPLETE Python script
+        // Run the COMPLETE Python script
         // --------------------------------------------------
 
         await pyodide.runPythonAsync(
-            pythonCode
+            pythonCode,
+            {
+                filename: "program.py"
+            }
         );
 
 
-        write("\n");
-
-        const status =
-            document.createElement("span");
-
-        status.className = "status";
-
-        status.textContent =
-            "Program finished.";
-
-        output.appendChild(status);
+        print("\nProgram finished.\n");
 
 
     } catch (error) {
 
-        output.innerHTML = "";
-
-        const errorElement =
-            document.createElement("div");
-
-        errorElement.className = "error";
-
-        errorElement.textContent =
-            "ERROR:\n\n" +
-            error.toString();
-
-        output.appendChild(errorElement);
+        consoleBox.innerHTML +=
+            `<span class="error">\nERROR:\n${escapeHtml(error.toString())}\n</span>`;
 
         console.error(error);
     }
 }
 
 
-main();
+// --------------------------------------------------
+// Prevent HTML in Python output from being interpreted
+// --------------------------------------------------
+
+function escapeHtml(text) {
+
+    return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+}
+
+
+// --------------------------------------------------
+// Start
+// --------------------------------------------------
+
+startPython();
 
 </script>
 
