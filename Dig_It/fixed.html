@@ -148,7 +148,7 @@
         </button>
 
     </div>
-
+    <button id="legacy">Legacy mode (slightly broken)</button>
 
     <!-- ==========================================
          PYODIDE
@@ -171,8 +171,11 @@
 
         const enterButton =
             document.getElementById("enterButton");
-
-
+        
+        const legacy = document.getElementById("legacy");
+        legacy.addEventListener("click",function(){
+            window.location.href = "https://www.pineapple-productions.net/Dig_It/legacy";
+        });
         // =========================================================
         // STATE
         // =========================================================
