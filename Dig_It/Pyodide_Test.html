@@ -53,8 +53,9 @@
         background: #00cc66;
     }
 
-    .error {
-        color: #ff4444;
+    button:disabled,
+    #inputBox:disabled {
+        opacity: 0.5;
     }
 </style>
 </head>
@@ -63,7 +64,7 @@
 
 <h1>Dig It</h1>
 
-<div id="console">Loading Python...</div>
+<div id="console"></div>
 
 <input
     type="text"
@@ -78,15 +79,18 @@
 <!-- Pyodide -->
 <script src="https://cdn.jsdelivr.net/pyodide/v0.29.2/full/pyodide.js"></script>
 
+
 <script>
 
 const consoleBox = document.getElementById("console");
 const inputBox = document.getElementById("inputBox");
 const enterButton = document.getElementById("enterButton");
 
+let waitingForInput = null;
+
 
 // --------------------------------------------------
-// Console output
+// Print to console
 // --------------------------------------------------
 
 function print(text) {
@@ -99,23 +103,99 @@ function print(text) {
 
 
 // --------------------------------------------------
-// Start Pyodide
+// Submit input
+// --------------------------------------------------
+
+function submitInput() {
+
+    if (!waitingForInput) {
+        return;
+    }
+
+    const value = inputBox.value;
+
+    inputBox.value = "";
+
+    // Show what the user entered
+    print(value + "\n");
+
+    // Save callback
+    const resolve = waitingForInput;
+
+    waitingForInput = null;
+
+    inputBox.disabled = true;
+    enterButton.disabled = true;
+
+    // Resume Python
+    resolve(value);
+}
+
+
+// --------------------------------------------------
+// Enter key
+// --------------------------------------------------
+
+inputBox.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Enter") {
+
+            event.preventDefault();
+
+            submitInput();
+        }
+    }
+);
+
+
+enterButton.addEventListener(
+    "click",
+    submitInput
+);
+
+
+// --------------------------------------------------
+// Python input
+// --------------------------------------------------
+
+function inputAsync(prompt) {
+
+    return new Promise((resolve) => {
+
+        // Display Python's prompt
+        print(prompt);
+
+        waitingForInput = resolve;
+
+        inputBox.disabled = false;
+        enterButton.disabled = false;
+
+        inputBox.focus();
+    });
+}
+
+
+// --------------------------------------------------
+// Start Python
 // --------------------------------------------------
 
 async function startPython() {
 
     try {
 
-        print("\nLoading Python...\n");
+        print("Loading Python...\n\n");
 
-
-        // Load Pyodide
         const pyodide =
             await loadPyodide();
 
 
+        print("Python loaded.\n\n");
+
+
         // --------------------------------------------------
-        // Python print()
+        // Make Python's print() go to our console
         // --------------------------------------------------
 
         pyodide.setStdout({
@@ -123,7 +203,6 @@ async function startPython() {
             batched(text) {
 
                 print(text);
-
             }
 
         });
@@ -137,39 +216,20 @@ async function startPython() {
 
             batched(text) {
 
-                consoleBox.innerHTML +=
-                    `<span class="error">${escapeHtml(text)}</span>`;
-
-                consoleBox.scrollTop =
-                    consoleBox.scrollHeight;
+                print(text);
             }
 
         });
 
 
         // --------------------------------------------------
-        // Python input()
-        //
-        // This uses the browser's synchronous prompt.
-        // It is compatible with normal Python input().
+        // Give Python access to inputAsync()
         // --------------------------------------------------
 
-        pyodide.setStdin({
-
-            stdin() {
-
-                const value =
-                    window.prompt("");
-
-                if (value === null) {
-                    return null;
-                }
-
-                return value;
-            },
-
-            isatty: true
-        });
+        pyodide.globals.set(
+            "browser_input",
+            inputAsync
+        );
 
 
         // --------------------------------------------------
@@ -195,7 +255,7 @@ async function startPython() {
 
 
         // --------------------------------------------------
-        // Run the COMPLETE Python script
+        // Execute Python
         // --------------------------------------------------
 
         await pyodide.runPythonAsync(
@@ -211,30 +271,16 @@ async function startPython() {
 
     } catch (error) {
 
-        consoleBox.innerHTML +=
-            `<span class="error">\nERROR:\n${escapeHtml(error.toString())}\n</span>`;
+        print(
+            "\n\nERROR:\n" +
+            error.toString() +
+            "\n"
+        );
 
         console.error(error);
     }
 }
 
-
-// --------------------------------------------------
-// Prevent HTML in Python output from being interpreted
-// --------------------------------------------------
-
-function escapeHtml(text) {
-
-    return text
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
-}
-
-
-// --------------------------------------------------
-// Start
-// --------------------------------------------------
 
 startPython();
 
