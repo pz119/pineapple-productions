@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
 <title>Dig It</title>
 
 <style>
@@ -38,12 +39,14 @@
         color: #00ff88;
         border: 2px solid #00ff88;
         box-sizing: border-box;
+        font-family: monospace;
     }
 
     button {
         padding: 10px 20px;
         font-size: 16px;
         background: #00ff88;
+        color: black;
         border: none;
         cursor: pointer;
         font-weight: bold;
@@ -56,6 +59,15 @@
     button:disabled,
     #inputBox:disabled {
         opacity: 0.5;
+        cursor: default;
+    }
+
+    .error {
+        color: #ff4444;
+    }
+
+    .status {
+        color: #888;
     }
 </style>
 </head>
@@ -86,12 +98,18 @@ const consoleBox = document.getElementById("console");
 const inputBox = document.getElementById("inputBox");
 const enterButton = document.getElementById("enterButton");
 
+
+// ==================================================
+// State
+// ==================================================
+
 let waitingForInput = null;
+let pyodide = null;
 
 
-// --------------------------------------------------
-// Print to console
-// --------------------------------------------------
+// ==================================================
+// Console output
+// ==================================================
 
 function print(text) {
 
@@ -102,28 +120,58 @@ function print(text) {
 }
 
 
-// --------------------------------------------------
+// ==================================================
+// Python input()
+// ==================================================
+
+function inputAsync(prompt) {
+
+    return new Promise((resolve) => {
+
+        // Display Python's prompt
+        if (prompt) {
+            print(prompt);
+        }
+
+        // Store the function that will resume Python
+        waitingForInput = resolve;
+
+        // Enable input
+        inputBox.disabled = false;
+        enterButton.disabled = false;
+
+        // Focus the textbox
+        inputBox.focus();
+    });
+}
+
+
+// ==================================================
 // Submit input
-// --------------------------------------------------
+// ==================================================
 
 function submitInput() {
 
+    // Don't do anything if Python isn't waiting
     if (!waitingForInput) {
         return;
     }
 
     const value = inputBox.value;
 
+    // Clear textbox
     inputBox.value = "";
 
-    // Show what the user entered
+    // Echo the user's input
     print(value + "\n");
 
-    // Save callback
+    // Get the Promise resolver
     const resolve = waitingForInput;
 
+    // Clear waiting state
     waitingForInput = null;
 
+    // Disable input until Python asks again
     inputBox.disabled = true;
     enterButton.disabled = true;
 
@@ -132,9 +180,9 @@ function submitInput() {
 }
 
 
-// --------------------------------------------------
+// ==================================================
 // Enter key
-// --------------------------------------------------
+// ==================================================
 
 inputBox.addEventListener(
     "keydown",
@@ -150,52 +198,39 @@ inputBox.addEventListener(
 );
 
 
+// ==================================================
+// Button
+// ==================================================
+
 enterButton.addEventListener(
     "click",
     submitInput
 );
 
 
-// --------------------------------------------------
-// Python input
-// --------------------------------------------------
-
-function inputAsync(prompt) {
-
-    return new Promise((resolve) => {
-
-        // Display Python's prompt
-        print(prompt);
-
-        waitingForInput = resolve;
-
-        inputBox.disabled = false;
-        enterButton.disabled = false;
-
-        inputBox.focus();
-    });
-}
-
-
-// --------------------------------------------------
+// ==================================================
 // Start Python
-// --------------------------------------------------
+// ==================================================
 
 async function startPython() {
 
     try {
 
-        print("Loading Python...\n\n");
+        print("Loading Python...\n");
 
-        const pyodide =
-            await loadPyodide();
+
+        // --------------------------------------------------
+        // Load Pyodide
+        // --------------------------------------------------
+
+        pyodide = await loadPyodide();
 
 
         print("Python loaded.\n\n");
 
 
         // --------------------------------------------------
-        // Make Python's print() go to our console
+        // Redirect Python print() to our console
         // --------------------------------------------------
 
         pyodide.setStdout({
@@ -209,21 +244,31 @@ async function startPython() {
 
 
         // --------------------------------------------------
-        // Python errors
+        // Redirect Python errors
         // --------------------------------------------------
 
         pyodide.setStderr({
 
             batched(text) {
 
-                print(text);
+                const error =
+                    document.createElement("span");
+
+                error.className = "error";
+
+                error.textContent = text;
+
+                consoleBox.appendChild(error);
+
+                consoleBox.scrollTop =
+                    consoleBox.scrollHeight;
             }
 
         });
 
 
         // --------------------------------------------------
-        // Give Python access to inputAsync()
+        // Give Python access to our input function
         // --------------------------------------------------
 
         pyodide.globals.set(
@@ -255,32 +300,54 @@ async function startPython() {
 
 
         // --------------------------------------------------
-        // Execute Python
+        // Run program.py
         // --------------------------------------------------
 
         await pyodide.runPythonAsync(
-            pythonCode,
-            {
-                filename: "program.py"
-            }
+            pythonCode
         );
 
 
-        print("\nProgram finished.\n");
+        // --------------------------------------------------
+        // Program finished
+        // --------------------------------------------------
+
+        print("\n");
+
+        const status =
+            document.createElement("span");
+
+        status.className = "status";
+
+        status.textContent =
+            "Program finished.";
+
+        consoleBox.appendChild(status);
 
 
     } catch (error) {
 
-        print(
-            "\n\nERROR:\n" +
-            error.toString() +
-            "\n"
-        );
+        consoleBox.innerHTML = "";
+
+        const errorElement =
+            document.createElement("span");
+
+        errorElement.className = "error";
+
+        errorElement.textContent =
+            "ERROR:\n\n" +
+            error.toString();
+
+        consoleBox.appendChild(errorElement);
 
         console.error(error);
     }
 }
 
+
+// ==================================================
+// Start
+// ==================================================
 
 startPython();
 
