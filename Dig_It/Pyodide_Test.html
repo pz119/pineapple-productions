@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Python Program</title>
+
+    <!-- Pyodide -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.2/full/pyodide.js"></script>
+
+    <style>
+        body {
+            background: #111;
+            color: #eee;
+            font-family: monospace;
+            margin: 0;
+            padding: 30px;
+        }
+
+        #console {
+            max-width: 900px;
+            margin: auto;
+            background: #000;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        #output {
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .error {
+            color: #ff5555;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="console">
+    <div id="output">Loading Python...</div>
+</div>
+
+<script>
+    let pyodide;
+
+    const output = document.getElementById("output");
+
+    function write(text) {
+        output.textContent += text;
+    }
+
+    async function main() {
+
+        // Load Python
+        pyodide = await loadPyodide();
+
+        write("Python loaded.\n\n");
+
+        // Redirect Python print() to our webpage
+        pyodide.setStdout({
+            batched: (text) => {
+                write(text);
+            }
+        });
+
+        // Redirect Python errors to our webpage
+        pyodide.setStderr({
+            batched: (text) => {
+                write(text);
+            }
+        });
+
+        try {
+
+            // Load your Python file
+            const response = await fetch("program.py");
+
+            if (!response.ok) {
+                throw new Error(
+                    `Could not load program.py (${response.status})`
+                );
+            }
+
+            const pythonCode = await response.text();
+
+            // Run the Python program
+            await pyodide.runPythonAsync(pythonCode);
+
+        } catch (error) {
+
+            write("\n\nERROR:\n");
+            write(error.toString());
+
+        }
+    }
+
+    main();
+</script>
+
+</body>
+</html>
