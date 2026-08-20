@@ -23,6 +23,7 @@
             border-radius: 8px;
             padding: 20px;
             min-height: 400px;
+            box-sizing: border-box;
         }
 
         #output {
@@ -36,19 +37,27 @@
             white-space: pre-wrap;
         }
 
+        .input-prompt {
+            white-space: pre-wrap;
+        }
+
         .input-box {
-            background: transparent;
-            color: #fff;
-            border: none;
-            outline: none;
-            font-family: monospace;
-            font-size: inherit;
             flex: 1;
             min-width: 0;
+
+            background: transparent;
+            color: white;
+
+            border: none;
+            outline: none;
+
+            font-family: monospace;
+            font-size: inherit;
         }
 
         .error {
             color: #ff5555;
+            white-space: pre-wrap;
         }
 
         .status {
@@ -61,21 +70,18 @@
 
 <div id="console">
     <div id="output">
-        <span class="status">Starting Python...</span>
+        <span class="status">Loading Python...</span>
     </div>
 </div>
 
 
-<script type="module">
+<!-- Pyodide -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.2/full/pyodide.js"></script>
+
+
+<script>
 
 const output = document.getElementById("output");
-
-
-// --------------------------------------------------
-// Create the Python worker
-// --------------------------------------------------
-
-const worker = new Worker("python-worker.js");
 
 
 // --------------------------------------------------
@@ -90,34 +96,40 @@ function write(text) {
 
 
 // --------------------------------------------------
-// Ask the user for input
+// Create an input field
 // --------------------------------------------------
 
-function createInput(prompt) {
+function getInput(promptText) {
 
     return new Promise((resolve) => {
 
         const line = document.createElement("div");
         line.className = "input-line";
 
-        const promptElement = document.createElement("span");
-        promptElement.textContent = prompt;
+
+        const prompt = document.createElement("span");
+        prompt.className = "input-prompt";
+        prompt.textContent = promptText;
+
 
         const input = document.createElement("input");
         input.className = "input-box";
+
         input.type = "text";
         input.autocomplete = "off";
         input.spellcheck = false;
 
-        line.appendChild(promptElement);
+
+        line.appendChild(prompt);
         line.appendChild(input);
 
         output.appendChild(line);
 
+
         input.focus();
 
 
-        input.addEventListener("keydown", (event) => {
+        input.addEventListener("keydown", function(event) {
 
             if (event.key !== "Enter") {
                 return;
@@ -125,17 +137,19 @@ function createInput(prompt) {
 
             event.preventDefault();
 
+
             const value = input.value;
 
 
-            // Turn the input box into normal text
+            // Replace the input box with plain text
             const text = document.createTextNode(value);
 
             line.replaceChild(text, input);
 
 
-            // Give the answer back to Python
+            // Give the answer back
             resolve(value);
+
         });
 
     });
@@ -143,77 +157,207 @@ function createInput(prompt) {
 
 
 // --------------------------------------------------
-// Receive messages from Python
+// Start Pyodide
 // --------------------------------------------------
 
-worker.onmessage = async (event) => {
+async function start() {
 
-    const message = event.data;
+    try {
 
-
-    // Python printed something
-    if (message.type === "stdout") {
-
-        write(message.text);
-
-        return;
-    }
+        // Load Pyodide
+        const pyodide = await loadPyodide();
 
 
-    // Python encountered an error
-    if (message.type === "stderr") {
+        output.innerHTML = "";
 
-        const error = document.createElement("div");
-
-        error.className = "error";
-
-        error.textContent = message.text;
-
-        output.appendChild(error);
-
-        return;
-    }
+        write("Python loaded.\n\n");
 
 
-    // Python wants input()
-    if (message.type === "input") {
+        // --------------------------------------------------
+        // stdout
+        // --------------------------------------------------
 
-        const answer = await createInput(message.prompt);
+        pyodide.setStdout({
 
-        worker.postMessage({
-            type: "input-response",
-            value: answer
+            batched: function(text) {
+
+                write(text);
+
+            }
+
         });
 
-        return;
-    }
+
+        // --------------------------------------------------
+        // stderr
+        // --------------------------------------------------
+
+        pyodide.setStderr({
+
+            batched: function(text) {
+
+                const error = document.createElement("div");
+
+                error.className = "error";
+
+                error.textContent = text;
+
+                output.appendChild(error);
+
+            }
+
+        });
 
 
-    // Python finished
-    if (message.type === "finished") {
+        // --------------------------------------------------
+        // Load program.py
+        // --------------------------------------------------
 
-        write("\n\n");
+        const response =
+            await fetch("program.py");
 
-        const status = document.createElement("span");
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Could not load program.py (" +
+                response.status +
+                ")"
+            );
+
+        }
+
+
+        const pythonCode =
+            await response.text();
+
+
+        // --------------------------------------------------
+        // Install our input()
+        // --------------------------------------------------
+
+        /*
+         * Important:
+         *
+         * Python's input() is synchronous.
+         *
+         * The Pyodide Console API provides the
+         * proper asynchronous machinery for this.
+         */
+
+        const setup = `
+from pyodide.console import Console
+
+__browser_console = Console(
+    globals=globals()
+)
+        `;
+
+
+        await pyodide.runPythonAsync(setup);
+
+
+        const console =
+            pyodide.globals.get(
+                "__browser_console"
+            );
+
+
+        // --------------------------------------------------
+        // Handle Python output
+        // --------------------------------------------------
+
+        console.stdout_callback = function(text) {
+
+            write(text);
+
+        };
+
+
+        console.stderr_callback = function(text) {
+
+            const error =
+                document.createElement("div");
+
+            error.className = "error";
+
+            error.textContent = text;
+
+            output.appendChild(error);
+
+        };
+
+
+        // --------------------------------------------------
+        // Handle input()
+        // --------------------------------------------------
+
+        console.stdin_callback = function(prompt) {
+
+            /*
+             * This callback is called by Python when
+             * input() needs something.
+             *
+             * The Console API handles the async
+             * execution around this callback.
+             */
+
+            return getInput(prompt);
+
+        };
+
+
+        // --------------------------------------------------
+        // Run the Python program
+        // --------------------------------------------------
+
+        const future =
+            console.runsource(
+                pythonCode,
+                "program.py"
+            );
+
+
+        await future;
+
+
+        write("\n");
+
+
+        const status =
+            document.createElement("span");
 
         status.className = "status";
 
-        status.textContent = "Program finished.";
+        status.textContent =
+            "Program finished.";
 
         output.appendChild(status);
 
-        return;
+
+    } catch (error) {
+
+        output.innerHTML = "";
+
+        const errorElement =
+            document.createElement("div");
+
+        errorElement.className = "error";
+
+        errorElement.textContent =
+            "ERROR:\n\n" +
+            error.toString();
+
+        output.appendChild(errorElement);
+
+        console.error(error);
+
     }
-};
+
+}
 
 
-// --------------------------------------------------
-// Start the Python program
-// --------------------------------------------------
-
-worker.postMessage({
-    type: "run"
-});
+start();
 
 </script>
 
