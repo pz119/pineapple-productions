@@ -386,7 +386,7 @@ async def escape():
     await ask()
     return
   print("You escaped!")
-async def await ask():
+async def ask():
   global money
   global health
   global hasStim
