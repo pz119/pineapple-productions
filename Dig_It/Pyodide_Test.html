@@ -281,8 +281,8 @@ async function startPython() {
         // Load program.py
         // --------------------------------------------------
 
-        const response =
-            await fetch("program.py");
+       
+        const response = await fetch("program.py?v=" + Date.now());
 
 
         if (!response.ok) {
