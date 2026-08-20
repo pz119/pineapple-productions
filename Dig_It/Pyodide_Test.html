@@ -306,6 +306,10 @@ async function startPython() {
         await pyodide.runPythonAsync(
             pythonCode
         );
+        
+        await pyodide.runPythonAsync(
+            "await main()"
+        );
 
 
         // --------------------------------------------------
