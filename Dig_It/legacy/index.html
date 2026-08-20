@@ -50,6 +50,11 @@
             button:hover {
                 background: #00cc66;
             }
+        .legacy{
+            position: fixed;
+            bottom: 0;
+            left: 0;
+        }
     </style>
 </head>
 <body>
@@ -60,7 +65,7 @@
 
     <input type="text" id="inputBox" placeholder="Type here..." />
     <button onclick="submitInput()">Enter</button>
-
+    <button class="legacy" id="legacy">Back to original</button>
     <script>const digResults = ["weapon","snake","scorpion",3,5,1,"money","money","snake","medkit"];
 const expResults = ["trader","shoes","money",12,"wolf","wolf","wolf","medstim","wolf","wolf","wolf","weapon","tnt","wolf","wolf","alpha wolf"];
 const scavResults = ["money","lava","money","","","","","","","","","","","turboShovel","mugger","mugger","medstim","dead animal","landmine","weapon","weapon","weapon","weapon","weapon"];
@@ -83,7 +88,10 @@ let hasStim = false;
 let hasPass = false;
 document.addEventListener("keydown", function(event) {if (event.key === "Enter") submitInput();});
 let waitingAction = null;
-
+const legacy = document.getElementById("legacy");
+legacy.addEventListener("click", function(){
+    window.location.href = "https://pineapple-productions.net/Dig_It/";
+});
 const consoleBox = document.getElementById("console");
 const inputBox = document.getElementById("inputBox");
 
