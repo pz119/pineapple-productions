@@ -81,7 +81,7 @@ async def main():
           ask()
           return
         if res == "lava":
-          yn = input("You come across a lava lake. Would you like to swim in it? y/n")
+          yn = await input_async("You come across a lava lake. Would you like to swim in it? y/n")
           n = yn == "n" or yn == "y"
           a = hasVial and yn == "y"
           b = yn == "n"
@@ -133,14 +133,14 @@ async def main():
           return
         print("You encountered a "+res+".")
         if res == "mugger":
-          inp = input("Would you like to fight, pay him or run?")
+          inp = await input_async("Would you like to fight, pay him or run?")
           if inp.lower() == "pay":
             money = 0
             print("You paid him off. He left you alone after that.")
             ask()
             return
         else:
-          inp = input("Would you like to fight or run?")
+          inp = await input_async("Would you like to fight or run?")
         if inp=="fight":
           if hasWeapon:
             print("You defeat the creature, but your weapon breaks. You found $20.")
@@ -214,7 +214,7 @@ async def main():
           ask()
           return
         print("You encountered a "+res+".")
-        inp = input("Would you like to fight or run?")
+        inp = await input_async("Would you like to fight or run?")
         if inp=="fight":
           if hasWeapon:
             print("You defeat the creature, but your weapon breaks. You found $20.")
@@ -282,7 +282,7 @@ async def main():
           return
         if res == "trader":
           print("You found a trader. You can buy food from him.")
-          yn = input("10:1 ratio, y/n?")
+          yn = await input_async("10:1 ratio, y/n?")
           if yn == "y":
             while True:
               if money < 10:
@@ -312,7 +312,7 @@ async def main():
           ask()
           return
         print("You encountered a "+res+".")
-        inp = input("Would you like to fight or run?")
+        inp = await input_async("Would you like to fight or run?")
         if inp=="fight":
           if res == "alpha wolf":
               if hasBoom:
@@ -397,7 +397,7 @@ async def main():
       global hasMap
       global stimHealth
       if health <= 0:
-        input("You died! Restarting...")
+        await input_async("You died! Restarting...")
         restart()
         return
       print("Health: "+str(health)+ ", Money: " +str(money)+", Food: " + str(food))
@@ -406,7 +406,7 @@ async def main():
         hasStim = False
         print("You dodged the health decrease.")
       stimHealth = health
-      inp = input("Would you like to dig, explore, scavenge, escape, or eat?")
+      inp = await input_async("Would you like to dig, explore, scavenge, escape, or eat?")
       if inp == "dig":
         dig()
         return
