@@ -6,6 +6,8 @@
 
     <title>Python Program</title>
 
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.2/full/pyodide.js"></script>
+
     <style>
         body {
             background: #111;
@@ -37,20 +39,13 @@
             white-space: pre-wrap;
         }
 
-        .input-prompt {
-            white-space: pre-wrap;
-        }
-
         .input-box {
             flex: 1;
             min-width: 0;
-
             background: transparent;
             color: white;
-
             border: none;
             outline: none;
-
             font-family: monospace;
             font-size: inherit;
         }
@@ -69,23 +64,18 @@
 <body>
 
 <div id="console">
-    <div id="output">
-        <span class="status">Loading Python...</span>
-    </div>
+    <div id="output">Loading Python...</div>
 </div>
 
-
-<!-- Pyodide -->
-<script src="https://cdn.jsdelivr.net/pyodide/v0.29.2/full/pyodide.js"></script>
-
-
 <script>
+
+let pyodide;
 
 const output = document.getElementById("output");
 
 
 // --------------------------------------------------
-// Write text to the console
+// Write text
 // --------------------------------------------------
 
 function write(text) {
@@ -96,35 +86,29 @@ function write(text) {
 
 
 // --------------------------------------------------
-// Create an input field
+// Create browser input
 // --------------------------------------------------
 
-function getInput(promptText) {
+function browserInput(promptText) {
 
     return new Promise((resolve) => {
 
         const line = document.createElement("div");
         line.className = "input-line";
 
-
-        const prompt = document.createElement("span");
-        prompt.className = "input-prompt";
-        prompt.textContent = promptText;
-
+        const prompt = document.createTextNode(promptText);
 
         const input = document.createElement("input");
-        input.className = "input-box";
 
+        input.className = "input-box";
         input.type = "text";
         input.autocomplete = "off";
         input.spellcheck = false;
-
 
         line.appendChild(prompt);
         line.appendChild(input);
 
         output.appendChild(line);
-
 
         input.focus();
 
@@ -137,19 +121,15 @@ function getInput(promptText) {
 
             event.preventDefault();
 
-
             const value = input.value;
 
-
-            // Replace the input box with plain text
-            const text = document.createTextNode(value);
+            // Replace input box with entered text
+            const text =
+                document.createTextNode(value);
 
             line.replaceChild(text, input);
 
-
-            // Give the answer back
             resolve(value);
-
         });
 
     });
@@ -157,18 +137,18 @@ function getInput(promptText) {
 
 
 // --------------------------------------------------
-// Start Pyodide
+// Main
 // --------------------------------------------------
 
-async function start() {
+async function main() {
 
     try {
 
         // Load Pyodide
-        const pyodide = await loadPyodide();
+        pyodide = await loadPyodide();
 
 
-        output.innerHTML = "";
+        output.textContent = "";
 
         write("Python loaded.\n\n");
 
@@ -179,10 +159,8 @@ async function start() {
 
         pyodide.setStdout({
 
-            batched: function(text) {
-
+            batched(text) {
                 write(text);
-
             }
 
         });
@@ -194,16 +172,43 @@ async function start() {
 
         pyodide.setStderr({
 
-            batched: function(text) {
+            batched(text) {
 
-                const error = document.createElement("div");
+                const error =
+                    document.createElement("div");
 
                 error.className = "error";
 
                 error.textContent = text;
 
                 output.appendChild(error);
+            }
 
+        });
+
+
+        // --------------------------------------------------
+        // Custom input()
+        // --------------------------------------------------
+
+        pyodide.setStdin({
+
+            stdin(prompt) {
+
+                /*
+                 * Python's input() is synchronous.
+                 *
+                 * browserInput() is asynchronous.
+                 *
+                 * run_sync() bridges the two.
+                 */
+
+                const promise =
+                    browserInput(prompt || "");
+
+                return pyodide.ffi.run_sync(
+                    promise
+                );
             }
 
         });
@@ -224,7 +229,6 @@ async function start() {
                 response.status +
                 ")"
             );
-
         }
 
 
@@ -233,96 +237,15 @@ async function start() {
 
 
         // --------------------------------------------------
-        // Install our input()
+        // Execute the COMPLETE Python script
         // --------------------------------------------------
 
-        /*
-         * Important:
-         *
-         * Python's input() is synchronous.
-         *
-         * The Pyodide Console API provides the
-         * proper asynchronous machinery for this.
-         */
-
-        const setup = `
-from pyodide.console import Console
-
-__browser_console = Console(
-    globals=globals()
-)
-        `;
-
-
-        await pyodide.runPythonAsync(setup);
-
-
-        const console =
-            pyodide.globals.get(
-                "__browser_console"
-            );
-
-
-        // --------------------------------------------------
-        // Handle Python output
-        // --------------------------------------------------
-
-        console.stdout_callback = function(text) {
-
-            write(text);
-
-        };
-
-
-        console.stderr_callback = function(text) {
-
-            const error =
-                document.createElement("div");
-
-            error.className = "error";
-
-            error.textContent = text;
-
-            output.appendChild(error);
-
-        };
-
-
-        // --------------------------------------------------
-        // Handle input()
-        // --------------------------------------------------
-
-        console.stdin_callback = function(prompt) {
-
-            /*
-             * This callback is called by Python when
-             * input() needs something.
-             *
-             * The Console API handles the async
-             * execution around this callback.
-             */
-
-            return getInput(prompt);
-
-        };
-
-
-        // --------------------------------------------------
-        // Run the Python program
-        // --------------------------------------------------
-
-        const future =
-            console.runsource(
-                pythonCode,
-                "program.py"
-            );
-
-
-        await future;
+        await pyodide.runPythonAsync(
+            pythonCode
+        );
 
 
         write("\n");
-
 
         const status =
             document.createElement("span");
@@ -351,13 +274,11 @@ __browser_console = Console(
         output.appendChild(errorElement);
 
         console.error(error);
-
     }
-
 }
 
 
-start();
+main();
 
 </script>
 
