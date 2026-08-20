@@ -25,11 +25,34 @@
             border: 1px solid #444;
             border-radius: 8px;
             padding: 20px;
+            min-height: 400px;
         }
 
         #output {
             white-space: pre-wrap;
             line-height: 1.5;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .input-prompt {
+            white-space: pre-wrap;
+        }
+
+        .user-input {
+            flex: 1;
+            background: transparent;
+            color: #fff;
+            border: none;
+            outline: none;
+            font-family: monospace;
+            font-size: inherit;
+            padding: 0;
+            margin: 0;
         }
 
         .error {
@@ -45,60 +68,177 @@
 </div>
 
 <script>
-    let pyodide;
 
-    const output = document.getElementById("output");
+let pyodide;
 
-    function write(text) {
-        output.textContent += text;
-    }
+const output = document.getElementById("output");
 
-    async function main() {
 
-        // Load Python
+// --------------------------------------------------
+// Write text to the console
+// --------------------------------------------------
+
+function write(text) {
+    output.appendChild(document.createTextNode(text));
+}
+
+
+// --------------------------------------------------
+// Create an input box for Python's input()
+// --------------------------------------------------
+
+function createInput(promptText) {
+
+    return new Promise((resolve) => {
+
+        const line = document.createElement("div");
+        line.className = "input-line";
+
+        const prompt = document.createElement("span");
+        prompt.className = "input-prompt";
+        prompt.textContent = promptText;
+
+        const input = document.createElement("input");
+        input.className = "user-input";
+        input.type = "text";
+        input.autocomplete = "off";
+        input.spellcheck = false;
+
+        line.appendChild(prompt);
+        line.appendChild(input);
+
+        output.appendChild(line);
+
+        input.focus();
+
+        // Submit when Enter is pressed
+        input.addEventListener("keydown", function(event) {
+
+            if (event.key !== "Enter") {
+                return;
+            }
+
+            event.preventDefault();
+
+            const value = input.value;
+
+            // Replace the editable input with normal text
+            const text = document.createTextNode(value);
+
+            line.replaceChild(text, input);
+
+            // Continue Python
+            resolve(value);
+        });
+
+    });
+}
+
+
+// --------------------------------------------------
+// Start Python
+// --------------------------------------------------
+
+async function main() {
+
+    try {
+
+        output.textContent = "Loading Python...\n";
+
         pyodide = await loadPyodide();
 
-        write("Python loaded.\n\n");
+        output.textContent = "Python loaded.\n\n";
 
-        // Redirect Python print() to our webpage
+
+        // --------------------------------------------------
+        // Redirect print() to our console
+        // --------------------------------------------------
+
         pyodide.setStdout({
             batched: (text) => {
+
                 write(text);
+
+                // print() normally includes its own newline.
+                // Pyodide's stdout gives us that newline as well.
+                if (!text.endsWith("\n")) {
+                    write("\n");
+                }
             }
         });
 
-        // Redirect Python errors to our webpage
+
+        // --------------------------------------------------
+        // Redirect errors to our console
+        // --------------------------------------------------
+
         pyodide.setStderr({
             batched: (text) => {
-                write(text);
+
+                const error = document.createElement("div");
+                error.className = "error";
+                error.textContent = text;
+
+                output.appendChild(error);
             }
         });
 
-        try {
 
-            // Load your Python file
-            const response = await fetch("program.py");
+        // --------------------------------------------------
+        // Replace Python's input()
+        // --------------------------------------------------
 
-            if (!response.ok) {
-                throw new Error(
-                    `Could not load program.py (${response.status})`
-                );
+        pyodide.setStdin({
+            stdin: async () => {
+
+                const value = await createInput("");
+
+                return value;
             }
+        });
 
-            const pythonCode = await response.text();
 
-            // Run the Python program
-            await pyodide.runPythonAsync(pythonCode);
+        // --------------------------------------------------
+        // Load program.py
+        // --------------------------------------------------
 
-        } catch (error) {
+        const response = await fetch("program.py");
 
-            write("\n\nERROR:\n");
-            write(error.toString());
-
+        if (!response.ok) {
+            throw new Error(
+                `Could not load program.py (${response.status})`
+            );
         }
-    }
 
-    main();
+        const pythonCode = await response.text();
+
+
+        // --------------------------------------------------
+        // Run the Python program
+        // --------------------------------------------------
+
+        await pyodide.runPythonAsync(pythonCode);
+
+
+        write("\n\nProgram finished.");
+
+
+    } catch (error) {
+
+        const errorElement = document.createElement("div");
+
+        errorElement.className = "error";
+
+        errorElement.textContent =
+            "\n\nERROR:\n" + error.toString();
+
+        output.appendChild(errorElement);
+    }
+}
+
+
+main();
+
 </script>
 
 </body>
