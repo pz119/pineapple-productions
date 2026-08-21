@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Powers of the Legion v1.1</title>
+    <style>
+        html {
+          display: flex;
+          justify-content: center; /* Centers horizontally */
+          align-items: center;     /* Centers vertically */
+          background-color: #1F1F1F;/* Ensures the parent takes full screen height */
+        }
+
+        #title {
+            text-align: center;
+            padding: 40px;
+            height: 600px;
+            background: #1C1C1C;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+            transition: all 0.3s ease;
+        }
+        .fadeable-element {
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+        
+        .is-faded {
+            opacity: 0;
+        }
+        .is-faded-in{
+          opacity: 1;
+        }
+        .can-fade-in{
+            opacity: 0;
+            transition: opacity 1s ease-out;
+        }
+        h1 {
+            margin-top: 0;
+            font-size: 3rem;
+            color: #e94560;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+        p {
+            margin: 0;
+            font-size: 2rem;
+            color: #e94560;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+        #game-container {
+          position: relative;
+            width: 800px;
+            height: 600px;
+            border: 4px solid #16213e;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            
+          justify-content: center; /* Centers horizontally */
+          align-items: center;     /* Centers vertically */
+          background-color: #1F1F1F;
+            
+        }
+        .hide{
+          display: none;
+        }
+        #gameCanvas {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        #game{
+            text-align: center;
+            padding: 40px;
+            height: 600px;
+            background: #62007d;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+            transition: all 0.3s ease;
+        }
+        #enemy{
+          position: absolute;
+          width: 75px;
+          height: auto;
+        }
+        #player{
+          position: absolute;
+          width: 75px;
+          height: auto;
+        }
+        .attack{
+          position: absolute;
+          width: 75px;
+          height: auto;
+        }
+        .healthbar{
+          position: absolute;
+          font-size: 30px;
+        }
+    </style>
+  </head>
+  <body>
+      <div id="game-container">
+      
+        <div id="game">
+            <!--ui stuff here-->
+            <!-- also game elements -->
+            <img id="enemy" src="https://files.catbox.moe/ckhq0n.png"><!--this is a placeholder-->
+            <img id="player" src="https://files.catbox.moe/xp6c4q.png"><!--this is a placeholder-->
+            <img id="stage" src="https://litter.catbox.moe/p3wujdyw6n9284u9.png">
+            <img id="enemyAttack" class="attack" src="https://files.catbox.moe/3pqonb.png">
+            <img id="playerAttack" class="attack" src="https://files.catbox.moe/3pqonb.png">
+            <p class="healthbar" id="enemyHealthbar"></p>
+            <p class="healthbar" id="yourHealthbar"></p>
+            <p id="waveCounter"></p>
+        </div>
+        <div id="title" class="fadeable-element"><h1>powers of the legion</h1><br><p id="startText">Click anywhere to start</p></div>
+    </div>
+      <script>
+        
+        
+        
+        
+        const coords = [[125,135],[290,135],[125,250],[290,250]];
+        for(let i = 0; i < coords.length; i++){
+          coords[i][0] -= 15;
+          coords[i][1] -= 10;
+        }
+        let position = 0;
+        let enemyPosition = 0;
+        const enemyOffsetX = 340;
+        const enemyOffsetY = 10;
+        const titleDiv = document.getElementById("title");
+        const game = document.getElementById("game");
+        const player = document.getElementById("player");
+        const enemy = document.getElementById("enemy");
+        const enemyHealthbar = document.getElementById("enemyHealthbar");
+        const yourHealthbar = document.getElementById("yourHealthbar");
+        const enemyAttack = document.getElementById("enemyAttack");
+        const yourAttack = document.getElementById("playerAttack");
+        const waveCounter = document.getElementById("waveCounter");
+        goToPosition(true);
+        goToPosition(false);
+        const keys = {};
+        game.classList.add("hide");
+        let startListenerEngaged = false;
+        let stage = 0; //0=start 1=fight 2=shop 3=boss 4=die
+        let sideID = 0; //progress, encoded
+        const path = [1,1,2,1,1,1,2,3];
+        window.addEventListener("keydown", e => {keys[e.code] = true;});
+        window.addEventListener("keyup", e => {keys[e.code] = false;});
+        function startUpdate(){
+          yourHealth = 50;
+          if(stage === 0){
+            if(!startListenerEngaged){
+              startListenerEngaged = true;
+              document.addEventListener('click', () => start(), { once: true }); 
+            }
+            requestAnimationFrame(startUpdate);
+          }
+        }
+        requestAnimationFrame(startUpdate);
+        let waveBackTime = 0;
+        function update(){
+          if(waveBackTime <= currentTime){
+            waveCounter.innerText = "Wave " + sideID.toString();
+          }
+          else
+          {
+            waveCounter.innerText = "Wave Won!";
+          }
+          yourHealthbar.innerText = yourHealth.toString();
+          enemyHealthbar.innerText = enemyHealth.toString();
+          if(keys["KeyA"] || keys["ArrowLeft"]) move("a");
+          if(keys["KeyS"] || keys["ArrowDown"]) move("s");
+          if(keys["KeyD"] || keys["ArrowRight"]) move("d");
+          if(keys["KeyW"] || keys["ArrowUp"]) move("w");
+          if(keys["Space"]) castSpell();
+          primed = !keys["Space"];
+          currentTime = performance.now()/1000;
+          if(stage == 1 || stage == 3) requestAnimationFrame(update);
+        }
+        let yourHealth = 50;
+        let enemyHealth = 20;
+        let shootNextTime = 0;
+        let currentTime = 0;
+        let primed = true;
+        function castSpell(){
+          if(primed){
+            if(currentTime >= shootNextTime){
+              shootNextTime = currentTime + 1;
+              if(position == enemyPosition){
+                enemyHealth -= 2;
+                if(enemyHealth <= 0){
+                  shop();
+                }
+              }
+            }
+          }
+        }
+        function shop(){
+          //stage = 2;
+          waveBackTime = currentTime += 1.5;
+          startMatch();
+        }
+        function move(dir, isEnemy = false) {
+              // Determine which position variable to update
+              let currentPos = isEnemy ? enemyPosition : position;
+          
+              if (dir == "a") {
+                  if (currentPos == 0 || currentPos == 2) return;
+                  currentPos -= 1;
+              }
+              if (dir == "s") {
+                  if (currentPos >= 2) return;
+                  currentPos += 2;
+              }
+              if (dir == "d") {
+                  if (currentPos == 1 || currentPos == 3) return;
+                  currentPos += 1;
+              }
+              if (dir == "w") {
+                  if (currentPos <= 1) return;
+                  currentPos -= 2;
+              }
+          
+              // Save the result back to the correct variable
+              if (isEnemy) {
+                  enemyPosition = currentPos;
+              } else {
+                  position = currentPos;
+                  shootNextTime -= 0.3;
+                  enemyMoveTime -= 0.75;
+              }
+          
+              goToPosition(isEnemy);
+          }
+
+        function start(){
+          stage = 1;
+          titleDiv.classList.add("hide");
+          game.classList.remove("hide");
+          startMatch();
+        }
+        function goToPosition(isEnemy){
+          if(!isEnemy){
+            player.style.left=coords[position][0] + "px";
+            player.style.top=coords[position][1] + "px";
+          }
+          else
+          {
+            enemy.style.left=coords[enemyPosition][0] + enemyOffsetX + "px";
+            enemy.style.top=coords[enemyPosition][1] + enemyOffsetY + "px";
+          }
+        }
+        let enemyMoveTime = 2;
+        let enemyShootTime = 1;
+        function enemyUpdate(){
+          if(enemyMoveTime <= currentTime){
+            let alfred = ["w","a","s","d"];
+            move(alfred[getRandomInt(0,3)],true);
+            enemyMoveTime = currentTime + 1 +(Math.random()/1.5);
+          }
+          if(enemyShootTime <= currentTime){
+            if(position == enemyPosition){
+              yourHealth -= 2; 
+              if(yourHealth <= 0){
+                lose();
+              }
+            }
+            enemyShootTime = currentTime + 1 + Math.random();
+          }
+          if(stage == 1 || stage == 3) requestAnimationFrame(enemyUpdate);
+        }
+        function lose(){
+          stage = 4;
+        }
+        requestAnimationFrame(updateProjectiles);
+        function updateProjectiles(){
+          enemyAttack.style.left=coords[enemyPosition][0] + "px";
+          enemyAttack.style.top=coords[enemyPosition][1] + enemyOffsetY + "px";
+          yourAttack.style.left=coords[position][0] + enemyOffsetX + "px";
+          yourAttack.style.top=coords[position][1] + enemyOffsetY + "px";
+          requestAnimationFrame(updateProjectiles);
+        }
+        requestAnimationFrame(updateHealth);
+        const healthbarOffsetX = 18.5;
+        const healthbarOffsetY = 48;
+        function updateHealth(){
+          enemyHealthbar.style.left=coords[enemyPosition][0] + enemyOffsetX + healthbarOffsetX + "px";
+          enemyHealthbar.style.top=coords[enemyPosition][1] + enemyOffsetY + healthbarOffsetY + "px";
+          yourHealthbar.style.left=coords[position][0] + healthbarOffsetX + "px";
+          yourHealthbar.style.top=coords[position][1] + enemyOffsetY + healthbarOffsetY + "px";
+          requestAnimationFrame(updateHealth);
+        }
+        function startMatch(){
+          sideID += 1;
+          
+          position = getRandomInt(0,3);
+          enemyPosition = getRandomInt(0,3);
+          enemyHealth = 20;
+          goToPosition(true);
+          goToPosition(false);
+          requestAnimationFrame(update);
+          requestAnimationFrame(enemyUpdate);
+        }
+        function getRandomInt(min, max) {
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+      </script>
+  </body>
+</html>
