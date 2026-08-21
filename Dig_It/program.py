@@ -10,6 +10,7 @@ stimHealth = health
 money = 0
 hasTurbo = False
 hasWeapon = False
+weapons = 0
 hasShoes = False
 hasVial = False
 hasBoom = False
@@ -55,6 +56,7 @@ async def scavenge():
   global hasVial
   global hasPass
   global hasTurbo
+  global weapons
   #canada
   #in loving memory of all the people in 9/11
   res = scavResults[random.randint(0,len(digResults)-1)]
@@ -103,7 +105,7 @@ async def scavenge():
       return
     if res=="weapon":
       print("You found a weapon.")
-      hasWeapon = True
+      weapons += 1
       await ask()
       return
     if res=="turboShovel":
@@ -172,6 +174,7 @@ async def dig():
   global hasWeapon
   global food
   global hasShoes
+  global weapons
   if hasTurbo:
     res = impDigResults[random.randint(0,len(impDigResults)-1)]
   else:
@@ -208,7 +211,7 @@ async def dig():
       return
     if res=="weapon":
       print("You found a weapon.")
-      hasWeapon = True
+      weapons += 1
       await ask()
       return
     print("You encountered a "+res+".")
@@ -394,10 +397,15 @@ async def ask():
   global hasKey
   global hasMap
   global stimHealth
+  global weapons
+  global hasWeapon
   if health <= 0:
     await input_async("You died! Restarting...")
     restart()
     return
+  if hasWeapon == False and weapons > 0:
+      weapons -= 1
+      hasWeapon = True
   print("Health: "+str(health)+ ", Money: " +str(money)+", Food: " + str(food))
   if health < stimHealth and hasStim:
     health = stimHealth
