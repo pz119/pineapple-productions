@@ -401,7 +401,7 @@ async def ask():
   global hasWeapon
   if health <= 0:
     await input_async("You died! Restarting...")
-    restart()
+    await restart()
     return
   if hasWeapon == False and weapons > 0:
       weapons -= 1
