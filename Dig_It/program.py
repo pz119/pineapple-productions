@@ -406,6 +406,7 @@ async def ask():
   if hasWeapon == False and weapons > 0:
       weapons -= 1
       hasWeapon = True
+  print("")
   print("Health: "+str(health)+ ", Money: " +str(money)+", Food: " + str(food))
   if health < stimHealth and hasStim:
     health = stimHealth
