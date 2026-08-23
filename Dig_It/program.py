@@ -1,5 +1,5 @@
 import random
-digResults = ["weapon","snake", "scorpion", 3, 5, 1, "money", "money", "snake", "medkit"]
+digResults = ["weapon","snake", "scorpion", 3, 5, 1, "money", "money", "snake", "medkit", "medkit"]
 expResults = ["trader","shoes","money",12, "wolf", "wolf", "wolf", "medstim","wolf", "wolf", "wolf", "weapon", "tnt", "wolf", "wolf", "alpha wolf"]
 scavResults = ["money", "lava", "money","","","","","","","","","","", "turboShovel", "mugger", "mugger", "medstim", "dead animal", "landmine", "weapon", "weapon", "weapon", "weapon", "weapon"]
 impDigResults = ["weapon", "scorpion", 3, 5, 1, "money", "money", "medstim"]
@@ -19,6 +19,13 @@ hasMap = False
 hasStim = False
 hasVial = False
 hasPass = False
+async def fightInp(prompt, isMugger):
+    thing = ""
+    okThings = ["fight","run"]
+    while (not thing in okThings) or not (isMugger and thing == "pay"):
+        thing = await input_async(prompt)
+        thing = thing.lower()
+    return thing
 async def input_async(prompt=""):
     return await browser_input(prompt)
 async def restart():
@@ -133,14 +140,14 @@ async def scavenge():
       return
     print("You encountered a "+res+".")
     if res == "mugger":
-      inp = await input_async("Would you like to fight, pay him or run?")
+      inp = await fightInp("Would you like to fight, pay him or run?")
       if inp.lower() == "pay":
         money = 0
         print("You paid him off. He left you alone after that.")
         await ask()
         return
     else:
-      inp = await input_async("Would you like to fight or run?")
+      inp = await fightInp("Would you like to fight or run?")
     if inp=="fight":
       if hasWeapon:
         print("You defeat the creature, but your weapon breaks. You found $20.")
@@ -215,7 +222,7 @@ async def dig():
       await ask()
       return
     print("You encountered a "+res+".")
-    inp = await input_async("Would you like to fight or run?")
+    inp = await fightInp("Would you like to fight or run?")
     if inp=="fight":
       if hasWeapon:
         print("You defeat the creature, but your weapon breaks. You found $20.")
@@ -313,7 +320,7 @@ async def explore():
       await ask()
       return
     print("You encountered a "+res+".")
-    inp = await input_async("Would you like to fight or run?")
+    inp = await fightInp("Would you like to fight or run?")
     if inp=="fight":
       if res == "alpha wolf":
           if hasBoom:
