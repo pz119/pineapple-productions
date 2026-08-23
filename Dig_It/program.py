@@ -317,7 +317,7 @@ async def explore():
     if res=="tnt":
       print("You found some TNT.")
       hasBoom = True
-      if random.randint(1,5) == 1:
+      if random.randint(1,5) <= 2:
         print("You found a map wrapped around it.")
         hasMap = True
       await ask()
