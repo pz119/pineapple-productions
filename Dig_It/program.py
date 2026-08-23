@@ -19,7 +19,7 @@ hasMap = False
 hasStim = False
 hasVial = False
 hasPass = False
-async def fightInp(prompt, isMugger):
+async def fightInp(prompt, isMugger=False):
     thing = ""
     okThings = ["fight","run"]
     while (not thing in okThings) or not (isMugger and thing == "pay"):
@@ -140,7 +140,7 @@ async def scavenge():
       return
     print("You encountered a "+res+".")
     if res == "mugger":
-      inp = await fightInp("Would you like to fight, pay him or run?")
+      inp = await fightInp("Would you like to fight, pay him or run?",True)
       if inp.lower() == "pay":
         money = 0
         print("You paid him off. He left you alone after that.")
