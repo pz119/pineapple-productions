@@ -422,7 +422,7 @@ async def ask():
     if weapons == 0:
       print("You have 1 weapon.")
     else:
-      print("You have " + str(weapons + 1) + "weapons.")
+      print("You have " + str(weapons + 1) + " weapons.")
   if health < stimHealth and hasStim:
     health = stimHealth
     hasStim = False
