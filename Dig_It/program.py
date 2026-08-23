@@ -1,7 +1,7 @@
 import random
 digResults = ["weapon","snake", "scorpion", 3, 5, 1, "money", "money", "snake", "medkit", "medkit"]
 expResults = ["trader","shoes","money",12, "wolf", "wolf", "wolf", "medstim","wolf", "wolf", "wolf", "weapon", "tnt", "wolf", "wolf", "alpha wolf"]
-scavResults = ["money", "lava", "money","","","","","","","","","","", "turboShovel", "mugger", "mugger", "medstim", "dead animal", "landmine", "weapon", "weapon", "weapon", "weapon", "weapon"]
+scavResults = ["money", "lava", "money","","","","","", "turboShovel", "mugger", "mugger", "medstim", "dead animal", "landmine", "weapon", "weapon", "weapon", "weapon", "weapon"]
 impDigResults = ["weapon", "scorpion", 3, 5, 1, "money", "money", "medstim"]
 inescapable = ["snake", "wolf", "alpha wolf"]
 health = 10
@@ -41,7 +41,7 @@ async def restart():
       global food
       global health
       global hasTurbo
-      print("Restarting...")
+      print("Restarting. If this gets stuck, try pressing enter.")
       health = 10
       food = 0
       money = 0
