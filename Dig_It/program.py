@@ -414,6 +414,7 @@ async def ask():
     print("You dodged the health decrease.")
   stimHealth = health
   inp = await input_async("Would you like to dig, explore, scavenge, escape, or eat?")
+    inp = inp.lower()
   if inp == "dig":
     await dig()
     return
