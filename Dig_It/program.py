@@ -22,10 +22,13 @@ hasPass = False
 async def fightInp(prompt, isMugger=False):
     thing = ""
     okThings = ["fight","run"]
-    while (not thing in okThings) or not (isMugger and thing == "pay"):
+    if isMugger:
+        okThings.append("pay")
+    while True:
         thing = await input_async(prompt)
         thing = thing.lower()
-    return thing
+        if thing in okThings:
+            return thing
 async def input_async(prompt=""):
     return await browser_input(prompt)
 async def restart():
