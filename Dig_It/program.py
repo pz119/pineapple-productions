@@ -306,7 +306,7 @@ async def explore():
       return
     if res=="weapon":
       print("You found a weapon.")
-      hasWeapon = True
+      weapons += 1
       await ask()
       return
     if res=="shoes":
